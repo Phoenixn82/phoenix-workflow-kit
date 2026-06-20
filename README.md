@@ -10,6 +10,8 @@ only the parts that fit how *you* work.
 > (a thinking lane, a building lane, a reading lane, a cheap/bulk lane), not the brand
 > of AI you point at each role.
 
+**Built from:** plain-markdown skill files (portable to any AI), with Python and Node for the optional scrub, sync, and test tooling.
+
 ---
 
 ## How to use this (the 4-step flow)
@@ -92,8 +94,6 @@ This kit is the *machinery*, never the *data*. Excluded by design:
 - AI auth/config files and `.env` files
 - Runtime logs and session state
 
-Released under the MIT license. See [`LICENSE`](LICENSE).
-
 Paths inside the framework are placeholders (`C:\Users\<you>\...`) and the operator is
 generalized as "the user" — your AI rewrites both for your environment during adoption.
 
@@ -105,3 +105,7 @@ The framework assumes some AIs can run shell commands, write files, and fire hoo
 yours can only chat, **keep the ideas** (the routing logic, the prompts, the second-brain
 habit) and **drop the machinery** it can't execute. The implementation prompt handles this
 for you — it asks what each of your AIs can actually *do* before recommending anything.
+
+## License
+
+Released under the MIT license — see [`LICENSE`](LICENSE).
