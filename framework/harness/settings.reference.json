@@ -1,0 +1,192 @@
+{
+  "skillListingBudgetFraction": 0.04,
+  "env": {
+    "BASH_MAX_OUTPUT_LENGTH": "150000"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(winget *)",
+      "Bash(choco *)",
+      "Bash(scoop *)",
+      "Bash(wsl *)",
+      "Bash(wsl.exe *)",
+      "Bash(msiexec *)",
+      "Bash(dism *)",
+      "Bash(setx *)",
+      "Bash(npm install -g *)",
+      "Bash(pnpm add -g *)",
+      "Bash(pip install *)",
+      "Bash(pipx install *)",
+      "Bash(uv tool install *)",
+      "Bash(brew install *)",
+      "Bash(cargo install *)",
+      "Bash(go install *)",
+      "PowerShell(winget *)",
+      "PowerShell(choco *)",
+      "PowerShell(scoop *)",
+      "PowerShell(Install-Module *)",
+      "PowerShell(Install-PackageProvider *)",
+      "PowerShell(Add-WindowsCapability *)",
+      "PowerShell(Enable-WindowsOptionalFeature *)",
+      "PowerShell(wsl *)"
+    ],
+    "deny": [
+      "Read(node_modules/**)",
+      "Read(dist/**)",
+      "Read(.next/**)",
+      "Read(coverage/**)",
+      "Read(target/**)",
+      "Read(__pycache__/**)",
+      "Read(.venv/**)",
+      "Read(*.egg-info/**)",
+      "Read(*.lock)",
+      "Read(package-lock.json)",
+      "Read(yarn.lock)",
+      "Read(pnpm-lock.yaml)",
+      "Read(poetry.lock)",
+      "Read(Cargo.lock)",
+      "Read(go.sum)",
+      "Read(**/.env)",
+      "Read(**/.env.local)",
+      "Read(**/.env.*.local)",
+      "Read(**/.env.production)",
+      "Read(**/.env.development)",
+      "Read(**/.env.cloud)",
+      "Edit(**/.env)",
+      "Read(**/*.env)",
+      "Edit(**/*.env)",
+      "Read(**/provider-keys*.json)",
+      "Edit(**/provider-keys*.json)",
+      "Read(~/.secrets/**)",
+      "Edit(~/.secrets/**)",
+      "Read(//c/Users/<you>/.secrets/**)",
+      "Read(~/.codex/auth.json)",
+      "Read(~/.aws/credentials)",
+      "Read(~/.netrc)",
+      "Read(**/*.pem)",
+      "Read(**/id_rsa)",
+      "Read(**/id_ed25519)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:/Users/<you>/.claude/scripts/hide-mcp-windows.ps1",
+            "shell": "powershell",
+            "timeout": 10,
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:/Users/<you>/.claude/scripts/cleanup-chrome-devtools-mcp.ps1",
+            "shell": "powershell",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:/Users/<you>/.claude/hooks/codex-handoff-watcher.ps1",
+            "shell": "powershell",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:/Users/<you>/.claude/hooks/codex-activity-watcher.ps1",
+            "shell": "powershell",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Read|Edit|MultiEdit|Write|Grep|Glob|Bash|PowerShell|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:/Users/<you>/.claude/hooks/secret-firewall/block-secrets.py",
+            "shell": "powershell",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|PowerShell|Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python C:/Users/<you>/.claude/hooks/secret-firewall/detect-secrets.py",
+            "shell": "powershell",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|MultiEdit|Write|NotebookEdit|Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:/Users/<you>/.claude/hooks/codex-claude-shared-log.ps1",
+            "shell": "powershell",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:/Users/<you>/.claude/hooks/aos-lock-read-fingerprint.ps1",
+            "shell": "powershell",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "chrome-devtools-mcp@claude-plugins-official": true,
+    "vercel-plugin@vercel": true
+  },
+  "outputStyle": "Signal",
+  "effortLevel": "xhigh",
+  "autoUpdatesChannel": "latest",
+  "skipDangerousModePermissionPrompt": true,
+  "skipWorkflowUsageWarning": true,
+  "autoMode": {
+    "allow": [
+      "$defaults",
+      "Installing system software via winget, choco, scoop, brew, apt, msiexec, or similar package managers (e.g. Docker Desktop, WSL2, Node, Python, Git, Postgres, Redis)",
+      "Running 'wsl --install', 'wsl --set-default-version', and other WSL setup commands",
+      "Enabling Windows optional features and capabilities via DISM, Add-WindowsCapability, or Enable-WindowsOptionalFeature",
+      "Installing global CLI tools via npm install -g, pnpm add -g, pipx install, cargo install, go install",
+      "Installing PowerShell modules via Install-Module from the PSGallery",
+      "Downloading and running MSI/EXE installers for developer tooling the user has approved (Docker, Postgres, Node, Python, Git, browsers, IDEs)",
+      "Configuring environment variables via setx for installed tooling",
+      "Dispatching a Codex /goal to perform any of the above. The user has full sandbox bypass on Codex side and authorizes autonomous system installs"
+    ],
+    "soft_deny": [
+      "$defaults"
+    ]
+  },
+  "autocompact_percentage_override": 75
+}

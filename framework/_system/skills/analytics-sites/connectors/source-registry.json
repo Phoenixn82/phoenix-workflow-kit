@@ -1,0 +1,57 @@
+{
+  "policy": {
+    "name": "CLI-first, free-only analytics connectors",
+    "noPaidApis": true,
+    "tierOrder": [
+      "printing_press_cli",
+      "first_party_cli",
+      "local_export",
+      "included_account_api",
+      "free_public_api",
+      "mcp"
+    ],
+    "blocked": [
+      "paid_api",
+      "metered_api_without_confirmed_free_quota",
+      "unknown_cost_api"
+    ]
+  },
+  "sources": [
+    {
+      "id": "ga4",
+      "label": "Google Analytics 4",
+      "currentTier": "included_account_api",
+      "cost": "free_google_account_quota"
+    },
+    {
+      "id": "gsc",
+      "label": "Google Search Console",
+      "currentTier": "included_account_api",
+      "cost": "free_google_account_quota"
+    },
+    {
+      "id": "gbp",
+      "label": "Google Business Profile",
+      "currentTier": "included_account_api",
+      "cost": "free_google_account_quota"
+    },
+    {
+      "id": "vercel",
+      "label": "Vercel",
+      "currentTier": "first_party_cli",
+      "cost": "included_existing_account"
+    },
+    {
+      "id": "smsleads",
+      "label": "SMS Leads",
+      "currentTier": "local_export",
+      "cost": "local_or_existing_account"
+    },
+    {
+      "id": "pagespeed",
+      "label": "PageSpeed / Lighthouse",
+      "currentTier": "free_public_api",
+      "cost": "free_public_quota"
+    }
+  ]
+}

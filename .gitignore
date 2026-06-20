@@ -1,0 +1,42 @@
+# Defensive — never let a future sync leak private data into this shared repo.
+# The sync tooling also guards against these, but git ignores them as a hard backstop.
+
+# Secrets / credentials
+*.env
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+.secrets/
+**/secret-store/secrets/
+*_token*
+*.credentials
+
+# Vault / second-brain CONTENT (the data is private). NOTE: the second-brain *skill*
+# at framework/_system/skills/second-brain/ is shippable machinery and must NOT be ignored.
+framework/_system/second-brain/
+**/claude_vault/
+**/voice-corpus/
+
+# AI auth/config
+.codex/
+**/.codex/
+
+# Runtime logs / state
+*.log
+.claude-codex-log.md
+.codex-session-changes/
+.codex-claude-handoff/
+pipeline/goal-runs/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Sync working dirs
+tools/_staging/
+_stage/

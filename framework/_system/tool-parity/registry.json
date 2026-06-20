@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "updated_at": "2026-06-08",
+  "policy": {
+    "goal": "Make Claude-dispatched tool requests safe for Codex by checking parity before accepting the task.",
+    "repair_order": [
+      "codex_native_tool",
+      "codex_plugin",
+      "codex_skill",
+      "cli",
+      "printing_press_cli",
+      "mcp_bridge",
+      "claude_only_handback"
+    ],
+    "never_do": [
+      "pretend a Claude-only tool is callable from Codex",
+      "install paid APIs or metered services without explicit free/no-cost confirmation",
+      "create direct-session Claude handoff files unless the user asks"
+    ]
+  },
+  "priority_tools": [
+    {
+      "name": "firecrawl",
+      "aliases": ["firecrawl", "firecrawl-scrape", "firecrawl-search", "firecrawl-map", "firecrawl-crawl", "web-scrape"],
+      "claude_skill_prefixes": ["firecrawl", "web-scrape"],
+      "codex_skill_prefixes": ["web-scrape"],
+      "commands": ["firecrawl"],
+      "mcp_names": ["firecrawl"],
+      "repair_hint": "Use Firecrawl CLI if present. If missing, install/configure CLI or route through web-scrape mechanic."
+    },
+    {
+      "name": "printing-press",
+      "aliases": ["printing-press", "printing-press-router", "pp-cli", "cli-printing-press"],
+      "claude_skill_prefixes": ["printing-press-router"],
+      "codex_skill_prefixes": ["printing-press-router"],
+      "commands": ["printing-press", "go"],
+      "mcp_names": [],
+      "repair_hint": "Go is required for Printing Press Go CLIs. Install Go or configure a bundled Go path, then install/generate PP CLIs."
+    },
+    {
+      "name": "browser",
+      "aliases": ["browser", "in-app browser", "gstack", "chrome-devtools", "playwright"],
+      "claude_skill_prefixes": ["gstack", "open-gstack-browser", "setup-browser-cookies"],
+      "codex_skill_prefixes": ["browser:control-in-app-browser"],
+      "codex_plugins": ["browser@openai-bundled"],
+      "commands": ["chrome", "msedge"],
+      "mcp_names": ["chrome-devtools", "node_repl"],
+      "repair_hint": "Prefer Codex Browser plugin and node_repl browser control. Keep chrome-devtools MCP as Claude-side fallback."
+    },
+    {
+      "name": "github",
+      "aliases": ["github", "gh", "pull request", "issues"],
+      "claude_skill_prefixes": ["github", "gh-", "ship"],
+      "codex_skill_prefixes": ["github:"],
+      "codex_plugins": ["github@openai-curated"],
+      "commands": ["gh"],
+      "mcp_names": ["github"],
+      "repair_hint": "Use Codex GitHub plugin when exposed, otherwise GitHub CLI."
+    },
+    {
+      "name": "vercel",
+      "aliases": ["vercel", "deploy", "deployment", "vercel-plugin"],
+      "claude_skill_prefixes": ["land-and-deploy", "setup-deploy"],
+      "codex_skill_prefixes": ["vercel-plugin:"],
+      "codex_plugins": ["vercel-plugin@plugins-cli", "vercel@openai-curated"],
+      "commands": ["vercel"],
+      "mcp_names": ["vercel"],
+      "repair_hint": "Use Vercel plugin skills and Vercel CLI. Re-auth Vercel MCP if plugin logs invalid_token."
+    },
+    {
+      "name": "supabase",
+      "aliases": ["supabase", "database", "smsleads"],
+      "claude_skill_prefixes": [],
+      "codex_skill_prefixes": [],
+      "commands": ["supabase"],
+      "npx_packages": ["supabase"],
+      "mcp_names": ["supabase"],
+      "repair_hint": "Use the official npx route (`npx supabase ...`) or install the standalone/Scoop CLI. Do not use unsupported global npm install."
+    },
+    {
+      "name": "obsidian",
+      "aliases": ["obsidian", "second-brain", "vault", "memory"],
+      "claude_skill_prefixes": ["obsidian-second-brain", "learn", "context-save", "context-restore"],
+      "codex_skill_prefixes": ["second-brain"],
+      "commands": [],
+      "mcp_names": ["obsidian", "obsidian-vault"],
+      "repair_hint": "Codex can write the local markdown vault directly. MCP parity is optional; do not dump non-durable session logs."
+    },
+    {
+      "name": "gemini",
+      "aliases": ["gemini", "large context", "video multimodal"],
+      "claude_skill_prefixes": ["gemini"],
+      "codex_skill_prefixes": [],
+      "commands": [],
+      "mcp_names": ["gemini"],
+      "repair_hint": "Codex should use the local Gemini MCP bridge when configured; otherwise hand back Gemini-only long-context tasks."
+    },
+    {
+      "name": "google-workspace",
+      "aliases": ["gmail", "google-drive", "google-calendar", "sheets", "docs"],
+      "claude_skill_prefixes": [],
+      "codex_skill_prefixes": ["spreadsheets:", "documents:"],
+      "codex_plugins": ["documents@openai-primary-runtime", "spreadsheets@openai-primary-runtime"],
+      "commands": [],
+      "mcp_names": ["gmail", "google-drive", "google-calendar"],
+      "repair_hint": "Use Codex document/spreadsheet plugins for local artifacts. Install Google connectors only when explicitly needed."
+    },
+    {
+      "name": "openai-sites",
+      "aliases": ["sites", "openai sites", "codex sites"],
+      "claude_skill_prefixes": [],
+      "codex_skill_prefixes": [],
+      "commands": [],
+      "mcp_names": [],
+      "repair_hint": "OpenAI Sites plugin was not exposed in the checked Codex session. Use @Sites only when the plugin/tool is actually available."
+    }
+  ]
+}

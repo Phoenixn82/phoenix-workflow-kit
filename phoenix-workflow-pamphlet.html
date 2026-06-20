@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Workshop — an AI workflow you can adopt</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,900&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F0EEE6; --paper-2:#FAF9F5; --card:#FBFAF6;
+    --ink:#1F1E1D; --ink-soft:#3E3C38; --muted:#86847B; --faint:#B6B3A8;
+    --line:#E2DFD4; --line-2:#D8D4C6;
+    --clay:#CC785C; --coral:#DA7756; --rust:#BD5D3A; --ember:#A8442A;
+    --sage:#61715E; --gold:#C28B2F;
+    --espresso:#26221C; --espresso-2:#2F2A22;
+    --sans:'Hanken Grotesk',ui-sans-serif,system-ui,sans-serif;
+    --serif:'Fraunces',Georgia,'Times New Roman',serif;
+    --mono:'Spline Sans Mono',ui-monospace,'Cascadia Mono',Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--sans); font-size:18px; line-height:1.65; -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(1200px 700px at 78% -8%, rgba(218,119,86,.10), transparent 60%),
+      radial-gradient(900px 600px at -5% 12%, rgba(97,113,94,.07), transparent 55%);
+    background-attachment:fixed;
+  }
+  /* faint paper grain */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  }
+  .wrap{position:relative; z-index:1; max-width:1080px; margin:0 auto; padding:0 28px}
+  a{color:var(--rust); text-decoration:none} a:hover{text-decoration:underline}
+
+  /* ---- hero ---- */
+  header.hero{padding:108px 0 60px; max-width:1080px; margin:0 auto; padding-left:28px; padding-right:28px}
+  .kicker{font-family:var(--mono); font-size:13px; letter-spacing:.32em; text-transform:uppercase; color:var(--rust); margin:0 0 26px}
+  .kicker .dot{display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--coral); margin-right:12px; vertical-align:middle; box-shadow:0 0 0 4px rgba(218,119,86,.16)}
+  h1{font-family:var(--serif); font-weight:400; font-size:clamp(48px,8.5vw,104px); line-height:.96; letter-spacing:-.02em; margin:0 0 28px; color:var(--ink)}
+  h1 em{font-style:italic; color:var(--rust)}
+  .lede{font-family:var(--serif); font-weight:400; font-size:clamp(20px,2.6vw,27px); line-height:1.5; max-width:30ch; color:var(--ink-soft); margin:0 0 40px}
+  .lede b{font-weight:600; color:var(--ink)}
+  .meta-row{display:flex; flex-wrap:wrap; gap:10px 14px; font-family:var(--mono); font-size:12.5px; color:var(--muted)}
+  .chip{border:1px solid var(--line-2); border-radius:999px; padding:7px 15px; background:var(--card)}
+  .chip b{color:var(--rust); font-weight:500}
+
+  /* ---- generic section ---- */
+  section{padding:62px 0; border-top:1px solid var(--line)}
+  .eyebrow{font-family:var(--mono); font-size:12px; letter-spacing:.28em; text-transform:uppercase; color:var(--clay); margin:0 0 18px}
+  h2{font-family:var(--serif); font-weight:400; font-size:clamp(30px,4.4vw,46px); line-height:1.04; letter-spacing:-.018em; margin:0 0 22px}
+  h2 em{font-style:italic; color:var(--rust)}
+  .sec-intro{font-size:19px; color:var(--ink-soft); max-width:62ch; margin:0 0 38px}
+  p{margin:0 0 18px}
+
+  /* ---- philosophy tenets ---- */
+  .tenets{display:grid; grid-template-columns:repeat(2,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:16px; overflow:hidden}
+  .tenet{background:var(--card); padding:30px 30px 32px}
+  .tenet .n{font-family:var(--mono); font-size:12px; color:var(--coral); letter-spacing:.1em}
+  .tenet h3{font-family:var(--serif); font-weight:500; font-size:23px; margin:10px 0 10px; letter-spacing:-.01em}
+  .tenet p{font-size:16px; color:var(--ink-soft); margin:0}
+  .tenet b{color:var(--ink); font-weight:600}
+
+  /* ---- anatomy / hierarchy ---- */
+  .stack{display:grid; gap:14px; margin-top:8px}
+  .layer{display:grid; grid-template-columns:170px 1fr; gap:24px; align-items:start; padding:24px 28px; border:1px solid var(--line-2); border-radius:14px; background:var(--card); position:relative; overflow:hidden}
+  .layer::before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--accent,var(--clay))}
+  .layer .tag{font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent,var(--clay))}
+  .layer .tag .big{display:block; font-family:var(--serif); font-size:30px; letter-spacing:-.01em; text-transform:none; color:var(--ink); margin-top:6px; font-weight:500}
+  .layer p{margin:0; font-size:16px; color:var(--ink-soft)}
+  .layer code{font-family:var(--mono); font-size:13px; background:var(--paper); border:1px solid var(--line-2); padding:1px 7px; border-radius:6px; color:var(--rust)}
+
+  /* ---- two brains ---- */
+  .brains{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+  .brain{border-radius:16px; padding:30px; border:1px solid var(--line-2)}
+  .brain.think{background:linear-gradient(160deg,#FBFAF6,#F3F0E6)}
+  .brain.do{background:linear-gradient(160deg,#2B2620,#221E18); color:#EDE7DC; border-color:#3a3329}
+  .brain h3{font-family:var(--serif); font-weight:500; font-size:26px; margin:0 0 4px}
+  .brain .who{font-family:var(--mono); font-size:12.5px; letter-spacing:.1em; text-transform:uppercase; margin:0 0 16px}
+  .brain.think .who{color:var(--rust)} .brain.do .who{color:var(--coral)}
+  .brain ul{margin:0; padding:0; list-style:none}
+  .brain li{padding:7px 0 7px 22px; position:relative; font-size:15.5px}
+  .brain li::before{content:""; position:absolute; left:0; top:14px; width:8px; height:8px; border-radius:2px; transform:rotate(45deg)}
+  .brain.think li::before{background:var(--clay)} .brain.do li::before{background:var(--coral)}
+  .brain.do li{color:#D9D2C6}
+
+  /* ---- lanes (role-based, vendor-agnostic) ---- */
+  .lanes{display:grid; grid-template-columns:repeat(2,1fr); gap:16px}
+  .lane{background:var(--card); border:1px solid var(--line-2); border-radius:16px; padding:26px 28px 24px; position:relative; overflow:hidden}
+  .lane::before{content:""; position:absolute; top:0; bottom:0; left:0; width:4px; background:var(--accent,var(--clay))}
+  .lane .role{font-family:var(--mono); font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent,var(--clay))}
+  .lane h3{font-family:var(--serif); font-weight:500; font-size:24px; margin:9px 0 7px; letter-spacing:-.01em}
+  .lane .for{font-size:15px; color:var(--ink-soft); margin:0 0 15px}
+  .lane .map{font-size:13.5px; color:var(--muted); border-top:1px dashed var(--line-2); padding-top:13px; margin:0}
+  .lane .map b{color:var(--rust); font-weight:600}
+  .lane .map .you{color:var(--sage); font-weight:600}
+  .agnostic-note{margin-top:18px; background:linear-gradient(150deg,#FBFAF6,#F3EFE4); border:1px solid var(--line-2); border-radius:14px; padding:22px 26px; font-size:16px; color:var(--ink-soft)}
+  .agnostic-note b{color:var(--ink)}
+  @media(max-width:820px){.lanes{grid-template-columns:1fr}}
+
+  /* ---- toolbox grid ---- */
+  .tools{display:grid; grid-template-columns:repeat(3,1fr); gap:14px}
+  .tool{background:var(--card); border:1px solid var(--line-2); border-radius:13px; padding:20px 20px 22px; transition:transform .18s ease, box-shadow .18s ease, border-color .18s}
+  .tool:hover{transform:translateY(-3px); box-shadow:0 14px 34px -20px rgba(45,34,26,.4); border-color:var(--clay)}
+  .tool .nm{font-family:var(--mono); font-size:13.5px; color:var(--rust); font-weight:500; margin-bottom:7px}
+  .tool .nm .k{color:var(--faint)}
+  .tool p{margin:0; font-size:14.5px; color:var(--ink-soft); line-height:1.5}
+  .grouplabel{font-family:var(--mono); font-size:11.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); margin:28px 0 14px}
+  .grouplabel:first-child{margin-top:0}
+
+  /* ---- bridge ---- */
+  .bridge{display:grid; grid-template-columns:1fr; gap:14px}
+  .bnote{background:var(--card); border:1px solid var(--line-2); border-left:4px solid var(--sage); border-radius:12px; padding:20px 24px}
+  .bnote h4{font-family:var(--serif); font-weight:600; font-size:19px; margin:0 0 6px}
+  .bnote p{margin:0; font-size:15.5px; color:var(--ink-soft)}
+  .bnote code{font-family:var(--mono); font-size:12.5px; color:var(--rust)}
+
+  /* ---- the prompt ---- */
+  .prompt-sec{border-top:1px solid var(--line)}
+  .promptbox{background:var(--espresso); border-radius:20px; overflow:hidden; box-shadow:0 40px 90px -50px rgba(38,34,28,.8); border:1px solid #3a3329}
+  .promptbar{display:flex; align-items:center; justify-content:space-between; padding:16px 22px; background:linear-gradient(90deg,#2F2A22,#262119); border-bottom:1px solid #3a3329}
+  .promptbar .label{font-family:var(--mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--coral); display:flex; align-items:center; gap:10px}
+  .promptbar .label .led{width:8px; height:8px; border-radius:50%; background:var(--coral); box-shadow:0 0 12px var(--coral)}
+  .copybtn{font-family:var(--mono); font-size:12.5px; letter-spacing:.05em; color:#EDE7DC; background:rgba(218,119,86,.16); border:1px solid rgba(218,119,86,.5); border-radius:8px; padding:9px 16px; cursor:pointer; transition:background .15s, transform .1s}
+  .copybtn:hover{background:rgba(218,119,86,.32)} .copybtn:active{transform:scale(.97)}
+  .copybtn.done{background:var(--sage); border-color:var(--sage); color:#F3F0E6}
+  pre.prompt{margin:0; padding:28px 26px; overflow-x:auto; color:#E7E0D4; font-family:var(--mono); font-size:13.5px; line-height:1.72; white-space:pre-wrap; word-wrap:break-word}
+  pre.prompt b{color:var(--coral); font-weight:500}
+
+  /* ---- zip / footer ---- */
+  .ziprow{display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:6px}
+  .zipcard{background:var(--card); border:1px solid var(--line-2); border-radius:12px; padding:18px 20px}
+  .zipcard .f{font-family:var(--mono); font-size:13px; color:var(--rust); margin-bottom:5px}
+  .zipcard p{margin:0; font-size:14.5px; color:var(--ink-soft)}
+  .steps{counter-reset:s; display:grid; gap:14px; margin-top:8px}
+  .step{display:grid; grid-template-columns:42px 1fr; gap:18px; align-items:start}
+  .step .num{counter-increment:s; font-family:var(--serif); font-size:34px; color:var(--clay); line-height:1; font-weight:500}
+  .step .num::before{content:counter(s)}
+  .step h4{margin:0 0 4px; font-family:var(--serif); font-weight:600; font-size:20px}
+  .step p{margin:0; font-size:15.5px; color:var(--ink-soft)}
+  footer{border-top:1px solid var(--line); padding:48px 0 90px; color:var(--muted); font-size:14px}
+  footer .big{font-family:var(--serif); font-size:24px; color:var(--ink-soft); max-width:46ch; margin:0 0 18px; font-style:italic}
+
+  /* ---- load animation ---- */
+  .rise{opacity:0; transform:translateY(16px); animation:rise .7s cubic-bezier(.2,.7,.2,1) forwards}
+  @keyframes rise{to{opacity:1; transform:none}}
+  .d1{animation-delay:.05s}.d2{animation-delay:.14s}.d3{animation-delay:.23s}.d4{animation-delay:.32s}.d5{animation-delay:.41s}
+
+  @media(max-width:820px){
+    .tenets,.brains,.tools,.ziprow{grid-template-columns:1fr}
+    .layer{grid-template-columns:1fr; gap:10px}
+    .layer .tag .big{font-size:26px}
+    body{font-size:17px}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <p class="kicker rise d1"><span class="dot"></span>A field guide to a working AI workflow</p>
+  <h1 class="rise d2">The <em>Workshop</em>.</h1>
+  <p class="lede rise d3">One operator, a router of AIs, and a rack of right-sized tools. The principle: send every job to the <b>role</b> that fits it — think, build, read, bulk — and let a vault remember everything. The author fills those roles with Claude, Codex, Gemini &amp; a local model router; <em>you map the same roles onto whatever you run.</em> A built-in prompt teaches your AI to take only the parts that fit you.</p>
+  <div class="meta-row rise d4">
+    <span class="chip"><b>21</b> mechanics</span>
+    <span class="chip"><b>~120</b> wrenches</span>
+    <span class="chip"><b>4</b> routed lanes &middot; any AI</span>
+    <span class="chip"><b>1</b> canonical vault</span>
+    <span class="chip">portable &middot; secret-free</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <section>
+    <p class="eyebrow">The idea</p>
+    <h2>Stop reaching for the <em>same hammer</em>.</h2>
+    <p class="sec-intro">Most AI setups are a junk drawer: one giant prompt, a pile of half-remembered tricks, and a model that improvises every time. This one is a workshop. Every job gets the right-sized tool, chosen on purpose — and the tools know about each other.</p>
+    <div class="tenets">
+      <div class="tenet"><span class="n">01</span><h3>Right-sized surfaces</h3><p>A narrow ask grabs a single <b>wrench</b>. A coordinated job calls a <b>mechanic</b> that dispatches its wrenches. A whole project from one prompt calls the <b>apex</b>. You never spin up more than the task needs.</p></div>
+      <div class="tenet"><span class="n">02</span><h3>Roles, not brands</h3><p>Route each turn to the right <b>lane</b> — thinking, building, long-context reading, cheap bulk — not to a favorite vendor. The author fills those lanes with Claude, Codex, Gemini &amp; a local router; <b>you map them to whatever AIs you run.</b></p></div>
+      <div class="tenet"><span class="n">03</span><h3>Nothing runs on its own</h3><p>No timers, no cron, no background spend while you're away. Every action is triggered by you. Autonomy is real — but it's <b>summoned</b>, never ambient.</p></div>
+      <div class="tenet"><span class="n">04</span><h3>The vault is the memory</h3><p>A second-brain vault is the single source of truth: project status, decisions, open loops, standing rules. Sessions are disposable; the vault is forever.</p></div>
+      <div class="tenet"><span class="n">05</span><h3>Cost-first, always</h3><p>Cheapest capable tool wins. Scraping climbs a ladder — managed API, then stealth browser, then local drivers — only escalating when it must. Free local models soak up bulk work.</p></div>
+      <div class="tenet"><span class="n">06</span><h3>Built to work every time</h3><p>A reliability standard governs anything shipped: it must resume, verify, and survive a cold restart. "It worked once" is not done. Done is proven.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The anatomy</p>
+    <h2>Apex, mechanic, <em>wrench</em>.</h2>
+    <p class="sec-intro">Three altitudes. You pick the one that matches the job — and a router helps when the choice isn't obvious.</p>
+    <div class="stack">
+      <div class="layer" style="--accent:var(--ember)">
+        <div class="tag">Apex<span class="big">project-orchestrator</span></div>
+        <p>A whole project from a single prompt. Intake → scope → dispatch → completion, coordinating every mechanic below it. The thing you call when you say "just build me the app."</p>
+      </div>
+      <div class="layer" style="--accent:var(--clay)">
+        <div class="tag">Mechanics<span class="big">coordinators</span></div>
+        <p>Each owns a domain and dispatches its own wrenches: <code>build</code>, <code>ship</code>, <code>seo</code>, <code>design-studio</code>, <code>plan-room</code>, <code>web-scrape</code>, <code>second-brain</code>, <code>router</code>, <code>guard</code>, and more. Call a mechanic when a job needs several tools in concert.</p>
+      </div>
+      <div class="layer" style="--accent:var(--gold)">
+        <div class="tag">Wrenches<span class="big">single tools</span></div>
+        <p>The ~120 leaf tools that do one thing well — <code>scrape</code>, <code>land-and-deploy</code>, <code>autoplan</code>, <code>schema</code>, <code>recall</code>. Loaded only when actually used, so the context stays lean. Call one directly for a narrow ask.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The router</p>
+    <h2>Lanes, not <em>loyalties</em>.</h2>
+    <p class="sec-intro">The core habit isn't "use Claude" or "use Codex" — it's routing each turn to the <em>role</em> that fits it. The author fills these four lanes with the AIs they happen to run; the pattern is vendor-agnostic. You map the same roles onto whatever you use.</p>
+    <div class="lanes">
+      <div class="lane" style="--accent:var(--clay)">
+        <p class="role">Lane 1 · think</p>
+        <h3>The architect</h3>
+        <p class="for">Planning, system design, decisions, prompt &amp; skill orchestration, reviewing whether work matches intent.</p>
+        <p class="map">Author runs: <b>Claude</b> &nbsp;·&nbsp; You'd map: <span class="you">your strongest reasoning model</span></p>
+      </div>
+      <div class="lane" style="--accent:var(--rust)">
+        <p class="role">Lane 2 · build</p>
+        <h3>The builder</h3>
+        <p class="for">Writing code &amp; tests, mechanical refactors, running commands, code-quality review, long hands-free <code>/goal</code> loops.</p>
+        <p class="map">Author runs: <b>Codex</b> &nbsp;·&nbsp; You'd map: <span class="you">your best coding agent</span></p>
+      </div>
+      <div class="lane" style="--accent:var(--sage)">
+        <p class="role">Lane 3 · read</p>
+        <h3>The long-context reader</h3>
+        <p class="for">Huge documents, whole codebases, video/audio — one giant context window. Reads &amp; analyzes; doesn't write the code.</p>
+        <p class="map">Author runs: <b>Gemini</b> (1M ctx, multimodal) &nbsp;·&nbsp; You'd map: <span class="you">your widest-context model</span></p>
+      </div>
+      <div class="lane" style="--accent:var(--gold)">
+        <p class="role">Lane 4 · bulk &amp; cheap</p>
+        <h3>The free local router</h3>
+        <p class="for">High-volume, low-stakes work that shouldn't burn premium tokens — routed to free/local models, OpenAI-compatible, strongest-healthy-first.</p>
+        <p class="map">Author runs: <b>FreeLLMAPI</b> (local :3001) &nbsp;·&nbsp; You'd map: <span class="you">a local/free model, or skip it</span></p>
+      </div>
+    </div>
+    <div class="agnostic-note">
+      <b>One AI for everything?</b> It simply wears all four hats — the routing logic still tells it which mode to be in. <b>Codex-primary?</b> The think + build lanes both point at Codex. <b>Running something niche</b> that can only chat and can't touch files? Keep the ideas — the routing, the prompts, the vault discipline — and skip the machinery it can't run. The roles are fixed; who fills them is yours.
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The toolbox</p>
+    <h2>Twenty-one <em>mechanics</em>.</h2>
+    <p class="sec-intro">Grouped by how they load. You don't memorize these — the index and decision-map route you. Here's the whole rack at a glance.</p>
+
+    <p class="grouplabel">Always-core — oriented at every session start</p>
+    <div class="tools">
+      <div class="tool"><div class="nm">router</div><p>Routes work to the right brain/lane — Claude, Codex, Gemini, or the local free-model router — with a no-self-rescue rule that hands off instead of looping.</p></div>
+      <div class="tool"><div class="nm">second-brain</div><p>The vault: capture, recall, learn, end-session. Persistent memory of projects, decisions, and standing rules across every session.</p></div>
+      <div class="tool"><div class="nm">guard</div><p>Opt-in safety: <span class="k">careful</span> warns before destructive commands, <span class="k">freeze</span> locks edits to a scope. Never nags unless you turn it on.</p></div>
+    </div>
+
+    <p class="grouplabel">Standalone keepers — called directly</p>
+    <div class="tools">
+      <div class="tool"><div class="nm">cso</div><p>Chief security officer. Read-only deep security review across a dozen phases — never edits, just finds.</p></div>
+      <div class="tool"><div class="nm">investigate</div><p>Systematic debugging: root cause before any fix. No symptom whack-a-mole.</p></div>
+      <div class="tool"><div class="nm">context-audit</div><p>Audits what's eating the context window and what to trim — quality first, noise out.</p></div>
+      <div class="tool"><div class="nm">windows-launcher</div><p>Ships clickable desktop launchers for apps — a branded icon, not a "run pnpm dev" note.</p></div>
+      <div class="tool"><div class="nm">printing-press-router</div><p>Enforces the CLI &gt; API &gt; MCP ladder before touching any third-party service.</p></div>
+    </div>
+
+    <p class="grouplabel">On-demand mechanics — loaded only when the task calls</p>
+    <div class="tools">
+      <div class="tool"><div class="nm">build</div><p>Scaffolds sites, apps, and backends with the right runtime per signal — never a webview shell by reflex.</p></div>
+      <div class="tool"><div class="nm">mobile-app</div><p>The Expo / React-Native pipeline: scaffold, on-device test, Supabase wiring, ship to stores.</p></div>
+      <div class="tool"><div class="nm">ship</div><p>Land-and-deploy, canary, benchmark, QA, release docs. The path from "works locally" to "live."</p></div>
+      <div class="tool"><div class="nm">seo</div><p>Full-site audit that fans out specialist sub-agents — technical, content, schema, GEO, backlinks, local.</p></div>
+      <div class="tool"><div class="nm">design-studio</div><p>DRIP pipeline: brand DNA × layout archetype × stack, rotated so no two sites look the same.</p></div>
+      <div class="tool"><div class="nm">plan-room</div><p>Autoplan, decision toolkit, and CEO / eng / devex review lenses before a line is written.</p></div>
+      <div class="tool"><div class="nm">web-scrape</div><p>Cost-first scraping: Firecrawl → Cloak stealth browser → local drivers, escalating only on block.</p></div>
+      <div class="tool"><div class="nm">content-forge</div><p>Marketing copy, humanizer, fact-checker, prompt-master — content that doesn't read like a robot.</p></div>
+      <div class="tool"><div class="nm">morning-briefing</div><p>On-demand synthesis from the vault + feeds. Never scheduled; fired when you want the picture.</p></div>
+      <div class="tool"><div class="nm">video-scan</div><p>Pulls transcript, metadata, and signal out of a video so you don't have to watch it.</p></div>
+      <div class="tool"><div class="nm">skill-forge</div><p>The meta-mechanic: scout for a matching skill, draft new ones, mirror them to Codex.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">The bridge</p>
+    <h2>Two AIs that <em>know what the other did.</em></h2>
+    <p class="sec-intro">The hard part of running more than one AI is keeping them in sync. A low-token bridge makes the connection bidirectional — neither works blind. (The author's bridge links Claude &amp; Codex; the same shared-log + hand-off pattern works between any two agents you run — or collapses to nothing if you use a single AI.)</p>
+    <div class="bridge">
+      <div class="bnote"><h4>Shared activity log</h4><p>One append-only line per action in <code>.claude-codex-log.md</code>. A hook writes Claude's edits automatically; a turn-end notify writes Codex's. Each side tails it and reconciles before touching a file the other just changed.</p></div>
+      <div class="bnote"><h4>Hand-off requests &amp; manifests</h4><p>Either AI can hand a task to the other with a structured request; session results land as relayable manifests so nothing gets lost between contexts.</p></div>
+      <div class="bnote"><h4>Tool parity</h4><p>Before either side is told to use a tool, a parity checker confirms the other can actually reach it — so a dispatch never assumes a capability that isn't there.</p></div>
+      <div class="bnote"><h4>Autonomous goals, hands-free</h4><p>The dispatcher hands long jobs to Codex's <code>/goal</code> loop via headless <code>codex exec</code> — it runs to completion with no keystroke, governed by a budget and a verification gate. A cross-session lock keeps two AIs from clobbering each other's files.</p></div>
+    </div>
+  </section>
+
+  <section class="prompt-sec">
+    <p class="eyebrow">Make it yours</p>
+    <h2>The <em>implementation prompt</em>.</h2>
+    <p class="sec-intro">Here's the point of the whole kit. Download the framework zip, then paste this prompt into <em>whatever AI you use</em> along with it. It won't blind-copy anyone's setup — it asks what AIs you run (Claude, Codex, Gemini, GPT, a local model, or something obscure), maps the framework's <em>roles</em> onto your lineup, rewrites the files to match your primary AI, takes only what your AI can actually use, and finishes with a best-practices cheat-sheet for operating it.</p>
+    <div class="promptbox">
+      <div class="promptbar">
+        <span class="label"><span class="led"></span>paste into your AI (any) — attach phoenix-workflow-framework.zip</span>
+        <button class="copybtn" id="copyBtn">Copy prompt</button>
+      </div>
+<pre class="prompt" id="promptText">I'm adopting another power-user's AI workflow system. Attached is <b>phoenix-workflow-framework.zip</b> — a "mechanic / wrench" skill framework with a role-based router, a cross-AI bridge, hooks, and a lock layer. It is a TEMPLATE, not a drop-in. It's written around the AUTHOR's specific AI lineup (a thinking lane = Claude, a building lane = Codex, a long-context reading lane = Gemini, a cheap/bulk lane = a local model router), and the paths are their machine. The private vault and all secrets were left out.
+
+<b>The philosophy is vendor-agnostic — the ROLE matters, not the brand.</b> Your job is to adapt it to MY AIs, whatever they are, and implement only what's useful to me. Do NOT copy anything yet. First, interview me.
+
+<b>STEP 1 — Learn my actual setup.</b> Ask a few at a time, wait for answers, and ask follow-ups until you genuinely understand my lineup. Do NOT assume I use Claude or Codex.
+- <b>List every AI/LLM I use</b> — Claude, Codex, GPT, Gemini, local/open models, or anything niche or obscure (even something like "owl alpha"). For EACH: what is it good at, and what can it actually DO — write files? run shell commands? use tools/MCPs? or only chat? Which one is my daily driver?
+- Which of my AIs (if any) would fill each role: deciding/architecting · writing code · reading long docs or video · cheap bulk work. One AI can wear several hats — that's fine; say so.
+- My OS and shell (paths + hooks differ across Windows / macOS / Linux).
+- The kinds of projects I work on, and what I repeat often enough to want templated.
+- What's broken or annoying in my current workflow.
+- Whether I want a persistent "second brain" vault, and where it'd live.
+- My autonomy comfort, from approve-every-step to fully hands-free.
+- What tools / MCPs / CLIs I already have, and which providers I pay for.
+- Solo, or do multiple AIs/people touch the same repos?
+
+<b>STEP 2 — Map the framework onto MY AIs.</b> Read AGENTS.md, SKILLS_INDEX.md, DECISION_MAP.md and MANIFEST.md to learn the philosophy and the role-based router. Then translate the author's role assignments onto MY lineup and show me a ranked proposal:
+- which mechanics / wrenches / hooks / patterns help MY work, and which to skip;
+- how each role maps to one of MY AIs — e.g. "you're Codex-primary, so think + build both route to Codex"; or "your main model can't run hooks, so keep the skill docs + vault discipline and drop the PowerShell machinery";
+- for any AI that can only chat (no file/command access), keep the IDEAS — the routing logic, the prompts, the vault habit — and drop the machinery it can't execute.
+Then wait for my approval.
+
+<b>STEP 3 — Implement the approved subset, rewritten for me.</b> Rewrite the files so they match MY primary AI and machine: swap the author's lane assignments for mine throughout the docs/skills, rewrite every hardcoded path for my OS/username, and translate or drop hooks/scripts my AI can't run. If I'm Codex-primary, rewrite the Claude-lane wording to Codex (and vice-versa); if I'm on an obscure model, grab only what it can genuinely use. Never introduce secrets. Work in small phases; after each, say exactly what changed and how to check it.
+
+<b>STEP 4 — Verify.</b> Show me each thing working with a concrete example from MY actual work, plus a one-line "how do I know it's working" check.
+
+<b>STEP 5 — Best-practices handoff.</b> Once it's built on my machine, give me a short "how to operate your new workflow" cheat-sheet so I get the best results:
+- right-size the call — a wrench for a narrow ask, a mechanic for a coordinated job, the apex for a whole project; don't over-summon;
+- route by role every turn — pick the lane/AI that fits the task;
+- keep the vault current — capture decisions + status as you go, or the memory rots;
+- trigger, don't automate — nothing runs on its own; you summon it;
+- verify before "done" — show evidence, never "it should work";
+- cost-first — prefer the cheapest capable lane; push bulk to the free/local one;
+- start small — adopt 2–3 pieces, live with them a week, then add more.
+
+Rules: surgical changes, explain trade-offs, ask before anything irreversible, adapt to me rather than cloning the author. Begin with STEP 1 now.</pre>
+    </div>
+  </section>
+
+  <section>
+    <p class="eyebrow">What's in the box</p>
+    <h2>The framework <em>zip</em>.</h2>
+    <p class="sec-intro">Portable and secret-free. The private vault (projects, decisions, business data), all keys, and runtime state were excluded on purpose.</p>
+    <div class="ziprow">
+      <div class="zipcard"><div class="f">AGENTS.md · SKILLS_INDEX.md · DECISION_MAP.md</div><p>The operating manual, the menu of every callable surface, and the task→tool routing map.</p></div>
+      <div class="zipcard"><div class="f">_system/skills/</div><p>Every mechanic's SKILL.md plus its wrenches and helper scripts — the whole rack, ~120 tools.</p></div>
+      <div class="zipcard"><div class="f">harness/ (bridge + hooks)</div><p>The Claude↔Codex shared-log hooks, the secret-firewall, the /goal dispatcher, helper scripts, and the settings wiring.</p></div>
+      <div class="zipcard"><div class="f">agentic-os/ + tool-parity/ + verify-bridge.py</div><p>The cross-session lock, the parity checker, and the read-only regression gate that proves the bridge still works.</p></div>
+    </div>
+    <p class="eyebrow" style="margin-top:46px">How to use it</p>
+    <div class="steps">
+      <div class="step"><div class="num"></div><div><h4>Open this page &amp; read the philosophy</h4><p>Five minutes. The tenets above are the whole mental model.</p></div></div>
+      <div class="step"><div class="num"></div><div><h4>Hand your AI the zip + the prompt</h4><p>Copy the implementation prompt, attach <code>phoenix-workflow-framework.zip</code>, and send it to whatever AI you use.</p></div></div>
+      <div class="step"><div class="num"></div><div><h4>Answer its questions</h4><p>It will interview you about your tools, OS, projects, and pain points before proposing anything.</p></div></div>
+      <div class="step"><div class="num"></div><div><h4>Approve the tailored subset</h4><p>You get a ranked "take this, skip that" plan. It adapts the ideas to you — it doesn't clone someone else's machine.</p></div></div>
+    </div>
+  </section>
+
+  <footer>
+    <p class="big">"Cut redundancy, not memory. Cut noise, not constraints. The architecture is the cost control."</p>
+    <p>A workflow field guide. The framework is shared as a template — adapt freely, keep your own secrets your own. Built with the mechanic/wrench philosophy it describes.</p>
+  </footer>
+
+</div>
+
+<script>
+  (function(){
+    var btn=document.getElementById('copyBtn');
+    var src=document.getElementById('promptText');
+    if(!btn||!src)return;
+    btn.addEventListener('click',function(){
+      var text=src.innerText;
+      var done=function(){btn.textContent='Copied ✓';btn.classList.add('done');setTimeout(function(){btn.textContent='Copy prompt';btn.classList.remove('done');},2200);};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done,function(){fallback(text,done);});}
+      else{fallback(text,done);}
+    });
+    function fallback(text,done){var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){}document.body.removeChild(ta);}
+  })();
+</script>
+</body>
+</html>

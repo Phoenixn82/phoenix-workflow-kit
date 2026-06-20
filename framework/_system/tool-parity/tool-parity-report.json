@@ -1,0 +1,211 @@
+{
+  "policy": {
+    "goal": "Make Claude-dispatched tool requests safe for Codex by checking parity before accepting the task.",
+    "repair_order": [
+      "codex_native_tool",
+      "codex_plugin",
+      "codex_skill",
+      "cli",
+      "printing_press_cli",
+      "mcp_bridge",
+      "claude_only_handback"
+    ],
+    "never_do": [
+      "pretend a Claude-only tool is callable from Codex",
+      "install paid APIs or metered services without explicit free/no-cost confirmation",
+      "create direct-session Claude handoff files unless the user asks"
+    ]
+  },
+  "summary": {
+    "total": 10,
+    "codex_ready": 9,
+    "codex_partial": 1,
+    "missing_codex": 0
+  },
+  "inventory": {
+    "claude_skill_count": 136,
+    "codex_skill_count": 143,
+    "claude_mcps": [
+      "gemini"
+    ],
+    "codex_mcps": [
+      "codegraph",
+      "gemini",
+      "node_repl"
+    ],
+    "codex_plugins": [
+      "browser@openai-bundled",
+      "cloudflare@openai-curated",
+      "codex-security@openai-curated",
+      "documents@openai-primary-runtime",
+      "github@openai-curated",
+      "hugging-face@openai-curated",
+      "openai-developers@openai-curated",
+      "presentations@openai-primary-runtime",
+      "remotion@openai-curated",
+      "spreadsheets@openai-primary-runtime",
+      "stripe@openai-curated",
+      "superpowers@openai-curated",
+      "test-android-apps@openai-curated",
+      "vercel-plugin@plugins-cli",
+      "vercel@openai-curated"
+    ],
+    "commands": {
+      "chrome": false,
+      "firecrawl": true,
+      "gh": true,
+      "go": false,
+      "msedge": false,
+      "node": true,
+      "npx": true,
+      "printing-press": true,
+      "python": true,
+      "supabase": false,
+      "vercel": true
+    },
+    "npx_packages": [
+      "supabase"
+    ]
+  },
+  "tools": [
+    {
+      "name": "firecrawl",
+      "status": "codex_ready",
+      "codex_ready_reasons": [
+        "codex skill",
+        "cli: firecrawl"
+      ],
+      "claude_reasons": [
+        "claude skill"
+      ],
+      "missing": [
+        "codex mcp: firecrawl"
+      ],
+      "next_action": "Use Firecrawl CLI if present. If missing, install/configure CLI or route through web-scrape mechanic."
+    },
+    {
+      "name": "printing-press",
+      "status": "codex_ready",
+      "codex_ready_reasons": [
+        "codex skill",
+        "cli: printing-press"
+      ],
+      "claude_reasons": [
+        "claude skill"
+      ],
+      "missing": [],
+      "next_action": "Go is required for Printing Press Go CLIs. Install Go or configure a bundled Go path, then install/generate PP CLIs."
+    },
+    {
+      "name": "browser",
+      "status": "codex_ready",
+      "codex_ready_reasons": [
+        "codex plugin: browser@openai-bundled",
+        "codex mcp"
+      ],
+      "claude_reasons": [
+        "claude skill"
+      ],
+      "missing": [
+        "codex skill prefix: browser:control-in-app-browser",
+        "cli: chrome, msedge"
+      ],
+      "next_action": "Prefer Codex Browser plugin and node_repl browser control. Keep chrome-devtools MCP as Claude-side fallback."
+    },
+    {
+      "name": "github",
+      "status": "codex_ready",
+      "codex_ready_reasons": [
+        "codex plugin: github@openai-curated",
+        "cli: gh"
+      ],
+      "claude_reasons": [
+        "claude skill"
+      ],
+      "missing": [
+        "codex skill prefix: github:",
+        "codex mcp: github"
+      ],
+      "next_action": "Use Codex GitHub plugin when exposed, otherwise GitHub CLI."
+    },
+    {
+      "name": "vercel",
+      "status": "codex_ready",
+      "codex_ready_reasons": [
+        "codex plugin: vercel-plugin@plugins-cli",
+        "codex plugin: vercel@openai-curated",
+        "cli: vercel"
+      ],
+      "claude_reasons": [
+        "claude skill"
+      ],
+      "missing": [
+        "codex skill prefix: vercel-plugin:",
+        "codex mcp: vercel"
+      ],
+      "next_action": "Use Vercel plugin skills and Vercel CLI. Re-auth Vercel MCP if plugin logs invalid_token."
+    },
+    {
+      "name": "supabase",
+      "status": "codex_ready",
+      "codex_ready_reasons": [
+        "npx: supabase"
+      ],
+      "claude_reasons": [],
+      "missing": [
+        "cli: supabase",
+        "codex mcp: supabase"
+      ],
+      "next_action": "Use the official npx route (`npx supabase ...`) or install the standalone/Scoop CLI. Do not use unsupported global npm install."
+    },
+    {
+      "name": "obsidian",
+      "status": "codex_ready",
+      "codex_ready_reasons": [
+        "codex skill"
+      ],
+      "claude_reasons": [
+        "claude skill"
+      ],
+      "missing": [
+        "codex mcp: obsidian, obsidian-vault"
+      ],
+      "next_action": "Codex can write the local markdown vault directly. MCP parity is optional; do not dump non-durable session logs."
+    },
+    {
+      "name": "gemini",
+      "status": "codex_ready",
+      "codex_ready_reasons": [
+        "codex mcp"
+      ],
+      "claude_reasons": [
+        "claude skill",
+        "claude mcp"
+      ],
+      "missing": [],
+      "next_action": "Codex should use the local Gemini MCP bridge when configured; otherwise hand back Gemini-only long-context tasks."
+    },
+    {
+      "name": "google-workspace",
+      "status": "codex_ready",
+      "codex_ready_reasons": [
+        "codex plugin: documents@openai-primary-runtime",
+        "codex plugin: spreadsheets@openai-primary-runtime"
+      ],
+      "claude_reasons": [],
+      "missing": [
+        "codex skill prefix: spreadsheets:, documents:",
+        "codex mcp: gmail, google-drive, google-calendar"
+      ],
+      "next_action": "Use Codex document/spreadsheet plugins for local artifacts. Install Google connectors only when explicitly needed."
+    },
+    {
+      "name": "openai-sites",
+      "status": "codex_partial",
+      "codex_ready_reasons": [],
+      "claude_reasons": [],
+      "missing": [],
+      "next_action": "OpenAI Sites plugin was not exposed in the checked Codex session. Use @Sites only when the plugin/tool is actually available."
+    }
+  ]
+}
