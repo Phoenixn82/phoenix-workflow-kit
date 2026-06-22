@@ -33,7 +33,7 @@ $AIP      = Join-Path $HOMEDIR "Desktop\AI_Projects"
 # and scrub.py's path guard is the backstop. These extra excludes keep private dirs from
 # ever being transiently staged before the scrub runs.
 $ExcludeDirs  = @("__pycache__","node_modules",".git","logs","state","pipeline","tests","secrets","_staging","voice-corpus",".secrets","claude_vault",".codex")
-$ExcludeFiles = @("*.log",".claude-codex-log.md","desktop.ini","Thumbs.db",".DS_Store")
+$ExcludeFiles = @("*.log",".claude-codex-log.md","desktop.ini","Thumbs.db",".DS_Store","denylist.local.json")
 
 function Sync-Tree($src, $dst) {
   if (-not (Test-Path $src)) { Write-Warning "skip (missing source): $src"; return }

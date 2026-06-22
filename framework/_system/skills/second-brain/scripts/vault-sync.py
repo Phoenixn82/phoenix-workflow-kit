@@ -109,7 +109,7 @@ def _plan_project_axis(
 
 def _project_dirs(harness_root: Path, project: str | None) -> list[Path]:
     # The harness "projects" dir is keyed by WORKSPACE PATH, not by vault project slug,
-    # and may contain stale shell-folder session dirs. Syncing into all of them fanned
+    # and may contain stale OneDrive-era session dirs. Syncing into all of them fanned
     # one project's status into every dir (incl. dead ones). This workspace has exactly
     # one canonical harness memory dir — target only that.
     if not harness_root.exists():

@@ -146,7 +146,17 @@ At `Projects/<slug>/handoff-<date>.md`, write the handoff with:
 
 ### Step 6: Confirm to the user
 
-One sentence: *"Session saved. Wrote N nodes, handoff at <path>, next-prompt ready."* Don't enumerate. He can read the log if he wants details.
+One sentence: *"Session saved. Wrote N nodes, handoff at <path>, next-prompt ready."* Don't enumerate. He can read the log if he wants details. If Step 7 synced the kit, append: *"…and synced <N> workflow change(s) to the public kit (commit <sha>)."*
+
+### Step 7: Sync workflow additions to the public kit (the user's standing rule, 2026-06-22)
+
+The user's rule: *"if a workflow addition is made, upon obsidian vault + handoff, look for those additions, check them for personal info, then add them to the public repo."* So as part of every end-session ritual:
+
+1. **Detect.** List this session's edits/creates that fall under a **tracked kit source** — the live-source map in `~/Desktop/phoenix-workflow-kit/tools/README.md`: `_system/skills/`, `_system/tool-parity/`, `_system/verify-bridge.py`, the AI_Projects root manuals (`AGENTS/CLAUDE/DECISION_MAP/SKILLS_INDEX/RELIABILITY_STANDARD.md`), `~/.claude/CLAUDE.md`, `~/.claude/settings.json`, `~/.claude/hooks/`, `~/.claude/scripts/`, `~/.claude/skills/codex-goal-dispatcher/`, `~/agentic-os/bin/aos_lock.py`. If nothing tracked changed, skip Step 7 entirely.
+2. **Personal-info check.** The kit's `tools/scrub.py` verify gate IS the de-personalization check — fail-closed, aborts at exit 2 on any identity/secret residue. Never push if it doesn't pass clean.
+3. **Push (gated, Codex lane).** The kit repo (`<your-github>/phoenix-workflow-kit`) is **PUBLIC**, so the push goes through the public-push gate, which Codex owns — dispatch Codex to run `tools/sync-kit.ps1 -Commit -Push -Message "<what changed>"` (scrub gate built in), then verify `git rev-parse HEAD` == the remote `main` SHA. Do NOT run the public push as a Claude loop. Exact flow + gotchas: the `phoenix-workflow-kit-repo` memory.
+
+This is proactive — don't wait for the user to ask. Surfacing "nothing tracked changed, no kit sync needed" is also a valid Step 7 outcome.
 
 ---
 

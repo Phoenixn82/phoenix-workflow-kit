@@ -29,7 +29,7 @@ import os
 import subprocess
 import sys
 
-# Absolute paths only (no stale shell-folder redirects, no C:\Users\<other-user>).
+# Absolute paths only (no OneDrive, no C:\Users\<other-user>).
 SHARED_LOG = r"C:\Users\<you>\.claude\skills\codex-goal-dispatcher\scripts\shared_log.py"
 FALLBACK_PROJECT = r"C:\Users\<you>\Desktop\AI_Projects"
 ERR_LOG = r"C:\Users\<you>\.claude\hooks\logs\codex-turn-notify.err.log"

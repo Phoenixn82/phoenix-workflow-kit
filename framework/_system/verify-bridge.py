@@ -38,7 +38,7 @@ import urllib.request
 import uuid
 from pathlib import Path
 
-# ---- Fixed, hardcoded real roots (never use stale shell-folder redirects). ----
+# ---- Fixed, hardcoded real roots (never use OneDrive / GetFolderPath). ----
 AI_PROJECTS = Path(r"C:\Users\<you>\Desktop\AI_Projects")
 HOME = Path(r"C:\Users\<you>")
 CLAUDE_HOME = HOME / ".claude"

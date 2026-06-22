@@ -28,6 +28,7 @@ The right tool deliberately chosen, not a reflex. When unclear, run `skill-scout
 | **New project brain-dump** | `plan-room` → process-interviewer → project-brief-generator → project-loadout → autoplan (4 review lenses) | Claude with Gemini for research | Full intake before any code touches disk |
 | **Turn AI text into human-sounding text / de-slop / "sound less AI" / "match my voice"** | `humanizer` mechanic → pick a voice wrench (default `build-in-public-engineer`; `mirror` when the writer supplied samples) | Claude | Mega humanizer: 47 tiered AI-tells, 9-step pass, 21-point check, 9 voice modes. Craft, not detector-evasion. content-forge's old humanizer wrench now redirects here |
 | **Verify factual claims in text** | `content-forge` → `fact-checker` | Claude | One wrench |
+| **"Time to blog?" / "what should I blog" / weekly digest / project update post** | Run `python Blog/tools/blog_radar.py report`, then fire `blog-write` | Claude plans, Codex writes | Detector selects the lane; writer produces the right blog surface and calls `blog_radar.py mark` |
 | **Design RAG for a project's data** | `build` → `rag-architect` wrench | Claude designs, Codex implements | Architecture decision for a project. NOT personal-memory infrastructure (that's `second-brain`) |
 | **Save context for next session** | `second-brain` end-of-session ritual (the user triggers) | Claude | Auto-extracts decisions, errors+fixes, defaults, status, open loops, corrections; shows draft; writes only what the user approves |
 | **Transcribe + screenshot a video** | `video-scan` (video-watch entry) | Codex (frame analysis routes there) | yt-dlp + ffmpeg + native captions; frame analysis on Codex subscription, not Claude tokens |
@@ -39,7 +40,7 @@ The right tool deliberately chosen, not a reflex. When unclear, run `skill-scout
 | **Export a doc to publication-quality PDF** | `make-pdf` (shared between design-studio and content-forge) | Claude | Cross-mechanic wrench |
 | **Find or recommend a skill for a task** | `skill-scout` (inside skill-forge) | Claude | TF-IDF rank over installed skills; flags conflicts; falls back to external registries |
 | **Create a new skill** | `skill-forge` → aos-add-a-skill (critique gate) → skill-creator (scaffold) | Claude | Critique-then-scaffold. The critique prevents skill bloat |
-| **Build a Windows desktop launcher / shortcut / .lnk / hidden CMD** | `windows-launcher` (standalone keeper) | Claude | Port-aware launchers, branded icons, process hiding; reads dev-registry/ports.md. Hardcodes real Desktop (no stale shell-folder redirects/GetFolderPath) |
+| **Build a Windows desktop launcher / shortcut / .lnk / hidden CMD** | `windows-launcher` (standalone keeper) | Claude | Port-aware launchers, branded icons, process hiding; reads dev-registry/ports.md. Hardcodes real Desktop (no OneDrive/GetFolderPath) |
 | **Audit the harness for token waste / context bloat** | `context-audit` (standalone keeper) | Claude | Audits MCP servers, CLAUDE.md, skills, settings; returns a health score with specific fixes |
 
 ---

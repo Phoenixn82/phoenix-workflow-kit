@@ -161,7 +161,7 @@ If the assigned port is already in use when launching:
 
 ### Multi-machine concerns
 
-The registry is the single source of truth at `_system/second-brain/dev-registry/ports.md`. (Legacy desktop sync is gone as of 2026-05-28; to stay consistent across machines, sync the `AI_Projects` folder via git or another explicit mechanism.)
+The registry is the single source of truth at `_system/second-brain/dev-registry/ports.md`. (OneDrive sync is gone as of 2026-05-28; to stay consistent across machines, sync the `AI_Projects` folder via git or another mechanism, not OneDrive.)
 
 ---
 

@@ -1,5 +1,13 @@
 ﻿# Changelog
 
+## 2026-06-22 - YAGNI ladder, handoff sync, public push gate
+
+- Added the YAGNI decision ladder to global coding Rule 2.
+- Added the kit-sync-on-handoff ritual as second-brain end-session Step 7.
+- Shipped the guard public-push gate with an externalized local denylist: `denylist.example.json` is tracked, real values stay in gitignored `denylist.local.json`.
+- Added the `blog-write` skill.
+- Generalized the operator GitHub owner handle in `scrub-rules.json` to a placeholder.
+
 ## 2026-06-20 - Public release prep refresh
 
 - Re-synced the framework from live sources through `tools/sync-kit.ps1`; scrub gate passed clean.

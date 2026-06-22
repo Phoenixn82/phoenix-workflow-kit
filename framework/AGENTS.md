@@ -89,6 +89,8 @@ The new workflow has 20 callable surfaces (5 standalone keepers + 14 mechanics +
 
 13. **No premature auth walls on pre-testing builds.** Until an app reaches the stage where real users test it, never put a login/password/credential gate between the user and his own work-in-progress. Building the onboarding/auth flow *as the product feature* is fine — that step can legitimately ask for credentials because the auth flow is the thing being built. What's banned is gating access to a project he's actively developing behind a password he didn't set or wasn't told; that locks him out of his own work for no reason. If a starter or scaffold ships with an auth wall (Supabase auth, Next.js/admin auth starters, etc.), disable or bypass it for local/dev until the testing stage — or seed a dev account and hand the user the credentials in plain sight — and state which you did. Default to open local dev; add the gate only when real users are about to come.
 
+14. **Public GitHub pushes are gated by Codex.** Any push to a public GitHub repo, and any private-to-public visibility flip, must pass the guard public-push gate first. Private repos and not-yet-created repos are exempt. Public targets fail closed if `gh`, `gitleaks`, `codex`, or the gate itself cannot run. Codex owns the GitHub security/de-personalization heavy lifting: gitleaks scans, personal-data denylist checks, and the final non-interactive Codex review. The gate is trigger-based (fires only on push or an explicit visibility-flip wrapper), so it does not violate hard rule #1.
+
 ---
 
 ## How to read this folder

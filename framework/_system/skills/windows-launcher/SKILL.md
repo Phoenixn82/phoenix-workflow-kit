@@ -247,9 +247,9 @@ function Snap-WindowLeft($processName) {
 3. **Generate from PNG/SVG** — if the project only has a PNG/SVG logo, convert it. Prefer ImageMagick (`magick logo.png -define icon:auto-resize=256,128,64,48,32,16 icon.ico`) if available, else use the favicon as-is even if it's low-res.
 4. **System icon fallback** — for pure-utility launchers with no brand, point at a Windows system icon: `IconLocation = "C:\Windows\System32\imageres.dll,109"` (gear), `,15` (folder), `,168` (terminal). Browse via `Get-ChildItem C:\Windows\System32\*.dll | % { ... }` or just pick from the well-known indexes.
 
-**CRITICAL — hardcode the real Desktop, never trust redirected Desktop APIs blindly:**
+**CRITICAL — hardcode the real Desktop, never use `$env:USERPROFILE\Desktop` OR `[Environment]::GetFolderPath`:**
 
-The user's shell-folder registry can point at a stale synced Desktop path. BOTH `$env:USERPROFILE\Desktop` and `[Environment]::GetFolderPath('Desktop')` may return a dead redirected Desktop path; shortcuts placed there are invisible because that folder no longer holds the live Desktop. Hardcode the real root:
+The user uninstalled OneDrive on 2026-05-28; only stale shell-folder redirects remain. BOTH `$env:USERPROFILE\Desktop` and `[Environment]::GetFolderPath('Desktop')` return the dead `C:\Users\<you>\OneDrive\Desktop` path — shortcuts placed there are invisible because that folder no longer holds the live Desktop. Hardcode the real root:
 ```powershell
 $desktop = 'C:\Users\<you>\Desktop'
 ```

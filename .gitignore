@@ -32,6 +32,9 @@ framework/_system/second-brain/
 .codex-claude-handoff/
 pipeline/goal-runs/
 
+# Maintainer-only public push gate local policy.
+framework/_system/skills/guard/scripts/denylist.local.json
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db

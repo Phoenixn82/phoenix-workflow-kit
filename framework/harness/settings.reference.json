@@ -105,6 +105,12 @@
             "command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:/Users/<you>/.claude/hooks/codex-activity-watcher.ps1",
             "shell": "powershell",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:/Users/<you>/.claude/hooks/github-publish-nudge.ps1",
+            "shell": "powershell",
+            "timeout": 5
           }
         ]
       }

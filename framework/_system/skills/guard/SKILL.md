@@ -5,14 +5,17 @@ description: "Safety mechanic — destructive command warnings + directory-scope
 
 # guard — safety rails (opt-in only)
 
-Two protections, one mechanic:
+Three protections, one mechanic:
 
 | Mode | What it does | How it blocks |
 |---|---|---|
 | **careful** | Warns before destructive bash commands (rm -rf, DROP TABLE, force-push, etc.) | PreToolUse Bash hook returns `permissionDecision: "ask"` — the user can override |
 | **freeze** | Restricts file edits to a chosen directory; files outside are **blocked** | PreToolUse Edit/Write hook returns `permissionDecision: "deny"` — hard block |
+| **public-push gate** | Blocks pushes or private-to-public flips for public GitHub repos until Codex security/de-personalization checks pass | Global Git `pre-push` hook and `scripts/gh-publicize.ps1`; private repos are skipped |
 
-Both can run alone or together. The combined `guard` mode activates both.
+`careful` and `freeze` can run alone or together. The combined `guard` mode activates both.
+
+The public-push gate is different from `careful` and `freeze`: it is a trigger-based Git safety rail, not a Claude tool hook. It only runs when a human pushes to a GitHub remote or uses the visibility-flip wrapper, so it does not violate the "no background work" rule.
 
 ## Fully opt-in — never the default
 
@@ -119,6 +122,33 @@ When the hooks are live, the mechanic's modes are session-scoped: invoking `care
 
 ---
 
+## Public GitHub push gate
+
+The global Git hook lives at `githooks/pre-push` and is installed with:
+
+```bash
+git config --global core.hooksPath "C:/Users/<you>/Desktop/AI_Projects/_system/skills/guard/githooks"
+```
+
+Behavior:
+- Non-GitHub remotes are skipped.
+- Private GitHub repos and missing/not-yet-created repos are skipped.
+- Public GitHub repos are gated fail-closed.
+- `GUARD_ALLOW_PUBLIC_PUSH=1` bypasses the gate for one deliberate operation and prints a loud banner.
+- After the gate passes, the hook chains any repo-local `.git/hooks/pre-push` so Husky, secret-firewall, and project hooks still run.
+
+For private-to-public flips, use:
+
+```powershell
+_system/skills/guard/scripts/gh-publicize.ps1 owner/repo
+```
+
+It runs `scripts/public_push_gate.py --mode publicize` against the current HEAD/default branch first, then calls `gh repo edit <repo> --visibility public --accept-visibility-change-consequences` only on PASS.
+
+See `PUBLIC_PUSH_GATE.md` for operator details and test controls.
+
+---
+
 ## Boundary semantics (for freeze)
 
 The trailing `/` on the freeze directory is load-bearing:
@@ -178,6 +208,8 @@ PreToolUse hook bodies at `scripts/` (built in Phase 5, acceptance-tested 2026-0
 |---|---|---|
 | `scripts/check-careful.sh` | PreToolUse Bash | Pattern-matches destructive commands (rm -rf, git push --force, DROP TABLE, kubectl delete, kill -9, etc.). Emits `ask` on match, `allow` otherwise. NEVER `deny`. The user overrides at the ask prompt. |
 | `scripts/check-freeze.sh` | PreToolUse Edit/Write | Reads `~/.claude/guard-state/freeze-dir.txt`. If absent → allow. Else checks if `file_path` is under the scope path via Python `os.path.commonpath` (cross-platform safe). Emits `deny` on out-of-scope. |
+| `scripts/public_push_gate.py` | Git pre-push / publicize wrapper | Queries GitHub visibility with `gh`; skips private/missing repos; fail-closed gates public targets with `gitleaks`, denylist scans, and `codex exec`. |
+| `scripts/gh-publicize.ps1` | Human-invoked visibility wrapper | Runs the same gate against the current repo HEAD, then flips GitHub visibility public only on PASS. |
 
 The `freeze` wrench writes `~/.claude/guard-state/freeze-dir.txt`; `freeze --clear` removes it. Hooks are NOT auto-wired into `settings.json` — fully opt-in via wrench invocation per [[Actions/permission-defaults]].
 

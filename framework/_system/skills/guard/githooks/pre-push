@@ -1,0 +1,59 @@
+#!/bin/sh
+set -u
+
+remote_name=${1:-}
+remote_url=${2:-}
+
+hook_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+gate_script="$hook_dir/../scripts/public_push_gate.py"
+
+stdin_file="${TMPDIR:-/tmp}/public-push-gate.$$.stdin"
+trap 'rm -f "$stdin_file"' EXIT HUP INT TERM
+cat > "$stdin_file"
+
+if command -v cygpath >/dev/null 2>&1; then
+  gate_script_for_python=$(cygpath -w "$gate_script")
+else
+  gate_script_for_python=$gate_script
+fi
+
+python "$gate_script_for_python" \
+  --mode pre-push \
+  --remote-name "$remote_name" \
+  --remote-url "$remote_url" \
+  --stdin-file "$stdin_file"
+gate_status=$?
+if [ "$gate_status" -ne 0 ]; then
+  exit "$gate_status"
+fi
+
+git_common_dir=$(git rev-parse --git-common-dir 2>/dev/null || true)
+if [ -z "$git_common_dir" ]; then
+  exit 0
+fi
+
+case "$git_common_dir" in
+  /*|[A-Za-z]:/*) ;;
+  *)
+    git_root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+    git_common_dir="$git_root/$git_common_dir"
+    ;;
+esac
+
+local_hook="$git_common_dir/hooks/pre-push"
+if [ ! -f "$local_hook" ]; then
+  exit 0
+fi
+
+this_norm=$(cd "$(dirname -- "$0")" && pwd -P)/$(basename -- "$0")
+local_norm=$(cd "$(dirname -- "$local_hook")" && pwd -P)/$(basename -- "$local_hook")
+if [ "$this_norm" = "$local_norm" ]; then
+  exit 0
+fi
+
+echo "[public-push-gate] chaining local pre-push hook: $local_hook" >&2
+if [ -x "$local_hook" ]; then
+  "$local_hook" "$remote_name" "$remote_url" < "$stdin_file"
+else
+  sh "$local_hook" "$remote_name" "$remote_url" < "$stdin_file"
+fi
