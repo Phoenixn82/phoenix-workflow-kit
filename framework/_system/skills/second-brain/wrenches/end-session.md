@@ -35,6 +35,14 @@ Walk the session's history and pull out every instance of each category. Don't p
 
 Walk the session chronologically. For each turn, mark which of the 9 categories apply. A single turn often hits multiple categories (a correction that becomes a preference, a decision that resolves an open loop).
 
+### Step 1.5: Harvest Codex spawn-findings.
+
+1. Look for `<project>/.codex-spawn-findings/<this-claude-session-id>.jsonl`. If absent or all rows `consumed:true`, skip the step (note "no Codex spawn-findings this session").
+2. Collect the unconsumed breadcrumbs' `rollout_path`s.
+3. Spawn **one** `codex exec` with `CODEX_BREADCRUMB_DISABLE=1` and the standard filesystem-boundary prompt prefix. Prompt: read the listed rollout JSONL transcript(s) and emit a findings digest, applying the wrench's discard rules (no raw code, no trivia, no errors-without-fixes, no junk). Categorize each finding by the 9-category scheme (decisions / preferences / errors+fix / tokens / status / new-skills / open-loops / corrections). Write the digest to `<project>/.codex-spawn-findings/<claude-session-id>.digest.md`.
+4. Claude reads the digest and folds the worthy items into the Step-2 draft as a clearly-labeled group: **"Codex spawn findings (pending approval)"**, attributed to Codex, with the source `codex_session_id` noted per item.
+5. After the user's Step-3 approval and Step-4 write, set `consumed:true` on the harvested breadcrumbs.
+
 ### Step 2: Build the draft
 
 Render every extracted item in vault format, but as a DRAFT — not yet written to disk. Show the user the full set, grouped by category. Format:

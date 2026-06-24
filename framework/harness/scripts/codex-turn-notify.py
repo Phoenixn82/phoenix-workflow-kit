@@ -28,6 +28,8 @@ import json
 import os
 import subprocess
 import sys
+from datetime import datetime, timezone
+from glob import glob
 
 # Absolute paths only (no OneDrive, no C:\Users\<other-user>).
 SHARED_LOG = r"C:\Users\<you>\.claude\skills\codex-goal-dispatcher\scripts\shared_log.py"
@@ -117,6 +119,168 @@ def _resolve_project(cwd: str) -> str:
     return FALLBACK_PROJECT
 
 
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def _today_rollout_dir() -> str:
+    now = datetime.now(timezone.utc)
+    return os.path.join(
+        os.path.expanduser("~"),
+        ".codex",
+        "sessions",
+        now.strftime("%Y"),
+        now.strftime("%m"),
+        now.strftime("%d"),
+    )
+
+
+def _rollout_matches_cwd(path: str, cwd: str) -> bool:
+    if not cwd:
+        return True
+    try:
+        with open(path, "r", encoding="utf-8", errors="replace") as fh:
+            blob = fh.read(200000)
+        return cwd in blob or cwd.replace("\\", "\\\\") in blob
+    except Exception:
+        return False
+
+
+def _session_id_from_rollout(path: str) -> str:
+    name = os.path.basename(path)
+    if not name.startswith("rollout-") or not name.endswith(".jsonl"):
+        return ""
+    stem = name[:-6]
+    marker = stem.rfind("-")
+    if marker == -1:
+        return ""
+    # UUID is the final 36 chars in rollout-<iso>-<uuid>.jsonl.
+    return stem[-36:] if len(stem) >= 36 else stem[marker + 1 :]
+
+
+def _find_rollout(codex_session_id: str, cwd: str) -> tuple[str, str]:
+    root = _today_rollout_dir()
+    if not os.path.isdir(root):
+        return codex_session_id, ""
+
+    if codex_session_id:
+        matches = glob(os.path.join(root, f"rollout-*{codex_session_id}*.jsonl"))
+        if matches:
+            newest = max(matches, key=lambda p: os.path.getmtime(p))
+            return codex_session_id, newest
+
+    candidates = glob(os.path.join(root, "rollout-*.jsonl"))
+    if cwd:
+        candidates = [p for p in candidates if _rollout_matches_cwd(p, cwd)]
+    if not candidates:
+        return codex_session_id, ""
+    newest = max(candidates, key=lambda p: os.path.getmtime(p))
+    return codex_session_id or _session_id_from_rollout(newest), newest
+
+
+def _breadcrumb_project(cwd: str) -> str:
+    for candidate in (os.environ.get("CLAUDE_PROJECT", ""), cwd, FALLBACK_PROJECT):
+        if not candidate:
+            continue
+        candidate = os.path.abspath(candidate)
+        try:
+            if not os.path.isdir(candidate):
+                continue
+            os.makedirs(os.path.join(candidate, ".codex-spawn-findings"), exist_ok=True)
+            return candidate
+        except Exception:
+            continue
+    return FALLBACK_PROJECT
+
+
+def _breadcrumb_kind(payload: dict) -> str:
+    explicit = _pick(payload, "kind", "mode", "runtime")
+    low = explicit.lower()
+    if "goal" in low:
+        return "goal"
+    if "interactive" in low or "tui" in low:
+        return "interactive"
+    aos_session = os.environ.get("AOS_SESSION_ID", "")
+    if aos_session.startswith("codex-goal-"):
+        return "goal"
+    return "exec"
+
+
+def _upsert_spawn_breadcrumb(payload: dict | None) -> None:
+    """Upsert one Claude-spawned Codex breadcrumb. Best-effort file IO only."""
+    if not os.environ.get("CLAUDE_SPAWN") or os.environ.get("CODEX_BREADCRUMB_DISABLE"):
+        return
+    if not isinstance(payload, dict):
+        return
+
+    cwd = _pick(payload, "cwd", "workdir", "working_directory", "project")
+    codex_session_id = _pick(payload, "conversation-id", "session-id", "session_id")
+    codex_session_id, rollout_path = _find_rollout(codex_session_id, cwd)
+    if not codex_session_id:
+        return
+
+    project = _breadcrumb_project(cwd)
+    claude_session_id = os.environ.get("CLAUDE_SESSION_ID", "").strip() or "unknown-claude-session"
+    queue_dir = os.path.join(project, ".codex-spawn-findings")
+    os.makedirs(queue_dir, exist_ok=True)
+    queue_path = os.path.join(queue_dir, f"{claude_session_id}.jsonl")
+
+    now = _utc_now()
+    last_assistant_message = _pick(
+        payload,
+        "last-assistant-message",
+        "last_assistant_message",
+        "last-agent-message",
+        "message",
+        "turn-id",
+        "turn_id",
+        "turn",
+        "type",
+    )
+    record = {
+        "codex_session_id": codex_session_id,
+        "claude_session_id": claude_session_id,
+        "project": project,
+        "cwd": cwd,
+        "rollout_path": rollout_path,
+        "kind": _breadcrumb_kind(payload),
+        "last_assistant_message": last_assistant_message,
+        "first_seen": now,
+        "last_seen": now,
+        "consumed": False,
+    }
+
+    records: list[dict] = []
+    try:
+        with open(queue_path, "r", encoding="utf-8") as fh:
+            for line in fh:
+                try:
+                    obj = json.loads(line)
+                    if isinstance(obj, dict):
+                        records.append(obj)
+                except Exception:
+                    continue
+    except FileNotFoundError:
+        pass
+
+    replaced = False
+    for idx, existing in enumerate(records):
+        if existing.get("codex_session_id") == codex_session_id:
+            record["first_seen"] = existing.get("first_seen") or now
+            records[idx] = record
+            replaced = True
+            break
+    if not replaced:
+        records.append(record)
+    records = records[-200:]
+
+    tmp_path = f"{queue_path}.tmp"
+    with open(tmp_path, "w", encoding="utf-8", newline="\n") as fh:
+        for obj in records:
+            fh.write(json.dumps(obj, ensure_ascii=False) + "\n")
+    os.replace(tmp_path, queue_path)
+
+
 def _append_log(payload: dict) -> None:
     """Append a single `codex turn` line. Best-effort."""
     try:
@@ -167,6 +331,7 @@ def _append_log(payload: dict) -> None:
 def main() -> int:
     # argv[1] = original program, argv[2:] = original args + appended JSON.
     original_argv = sys.argv[1:]
+    payload = None
 
     # 1) Preserve original notify behavior FIRST and unconditionally.
     _launch_original(original_argv)
@@ -181,6 +346,13 @@ def main() -> int:
             _log_err("no JSON payload parsed from argv/stdin")
     except Exception as exc:
         _log_err(f"main append block failed: {exc!r}")
+
+    # 3) Best-effort Claude-spawned Codex breadcrumb upsert. This block never
+    #    spawns another process; recursion stays structurally impossible.
+    try:
+        _upsert_spawn_breadcrumb(payload)
+    except Exception as exc:
+        _log_err(f"breadcrumb block failed: {exc!r}")
 
     return 0
 

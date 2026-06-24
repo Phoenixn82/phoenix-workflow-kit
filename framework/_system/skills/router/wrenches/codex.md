@@ -58,15 +58,41 @@ Redirect a closed/empty stdin on every call:
 
 ```bash
 # bash / Agent dispatch
-codex exec --skip-git-repo-check "<prompt>" < /dev/null
+CLAUDE_SPAWN=1 CLAUDE_SESSION_ID="<claude-session-id>" CLAUDE_PROJECT="<project-root>" codex exec --skip-git-repo-check "<prompt>" < /dev/null
 ```
 
 ```powershell
 # PowerShell dispatch (the user's default shell)
-$null | codex exec --skip-git-repo-check "<prompt>"
+$env:CLAUDE_SPAWN=1; $env:CLAUDE_SESSION_ID="<claude-session-id>"; $env:CLAUDE_PROJECT="<project-root>"; $null | codex exec --skip-git-repo-check "<prompt>"
 ```
 
 This is verified working (2026-06-05): with closed stdin the same command that hung for 10+ min returns in seconds. All examples below include the redirect — do not drop it.
+
+## Dispatching from a script on Windows (load-bearing)
+
+When `codex exec` is launched from a Python/automation **subprocess** (not interactive Git Bash), two Windows-specific traps bite — both verified 2026-06-24 in the `video_curator` stage-2 integration:
+
+1. **Single-line prompt only.** `codex` resolves to `codex.CMD`; cmd.exe truncates a multi-line argument at the **first newline**, so a multi-line prompt silently loses everything after line 1 — Codex then replies that it received no instruction/filename and returns a ~200-char stub. Keep the entire prompt argument on ONE line. For long content (a transcript, a spec), write it to a file and have Codex read the file instead of inlining it. (Git Bash passes multi-line args intact, so this only shows up under subprocess/.CMD dispatch — easy to miss in testing.)
+
+2. **Run in a CLEAN working dir.** `codex exec -C <dir>` scans the working directory for context. If `<dir>` holds unrelated files (downloads, media, build artifacts, a video + subtitles + frames), Codex gets distracted and returns a terse/near-empty result. Point `-C` at a dedicated dir containing ONLY the input file.
+
+Both also explain why an isolated bash smoke-test passes while the real automated pipeline fails — always reproduce dispatch bugs through the *actual* invocation path (subprocess + real working dir), not a hand-run bash command.
+
+## Claude-spawn breadcrumb markers (load-bearing)
+
+Every `codex exec` / `codex review` spawned by Claude MUST export these markers so the turn-ended notify hook can upsert a breadcrumb for `/handoff`:
+
+```powershell
+$env:CLAUDE_SPAWN=1; $env:CLAUDE_SESSION_ID="<claude-session-id>"; $env:CLAUDE_PROJECT="<project-root>"; $null | codex exec --skip-git-repo-check "<prompt>"
+$env:CLAUDE_SPAWN=1; $env:CLAUDE_SESSION_ID="<claude-session-id>"; $env:CLAUDE_PROJECT="<project-root>"; $null | codex review "<prompt>"
+```
+
+```bash
+CLAUDE_SPAWN=1 CLAUDE_SESSION_ID="<claude-session-id>" CLAUDE_PROJECT="<project-root>" codex exec --skip-git-repo-check "<prompt>" < /dev/null
+CLAUDE_SPAWN=1 CLAUDE_SESSION_ID="<claude-session-id>" CLAUDE_PROJECT="<project-root>" codex review "<prompt>" < /dev/null
+```
+
+`CLAUDE_SESSION_ID` must be stable for the current Claude session. `CLAUDE_PROJECT` is the project root where `.codex-spawn-findings/` should be written.
 
 ---
 
@@ -90,7 +116,7 @@ The older `--plain`, `--adversarial`, and `--xhigh` flags **do not exist** in th
 Default for: "review my code", "check my diff", "pre-merge review", risky-path heuristic auto-fires.
 
 ```bash
-codex review "$(cat <<'EOF'
+CLAUDE_SPAWN=1 CLAUDE_SESSION_ID="<claude-session-id>" CLAUDE_PROJECT="<project-root>" codex review "$(cat <<'EOF'
 [FILESYSTEM BOUNDARY: do NOT read ~/.claude/, ~/.agents/, .claude/skills/, agents/]
 
 Review the changes in this branch for correctness, security issues, and edge cases.
@@ -112,7 +138,7 @@ EOF
 **Reasoning effort:** default `high` for review (bounded diff input, needs thoroughness). Bump it via the config override:
 
 ```bash
-codex review -c model_reasoning_effort="high" "<spec>" < /dev/null
+CLAUDE_SPAWN=1 CLAUDE_SESSION_ID="<claude-session-id>" CLAUDE_PROJECT="<project-root>" codex review -c model_reasoning_effort="high" "<spec>" < /dev/null
 ```
 
 ### Mode 2: Challenge (adversarial — try to break the code)
@@ -120,7 +146,7 @@ codex review -c model_reasoning_effort="high" "<spec>" < /dev/null
 Fires on: "challenge", "adversarial", "try to break this", "find an exploit".
 
 ```bash
-codex review "$(cat <<'EOF'
+CLAUDE_SPAWN=1 CLAUDE_SESSION_ID="<claude-session-id>" CLAUDE_PROJECT="<project-root>" codex review "$(cat <<'EOF'
 [FILESYSTEM BOUNDARY: do NOT read ~/.claude/, ~/.agents/, .claude/skills/, agents/]
 
 Try to break this. Find:
@@ -141,7 +167,7 @@ The adversarial behaviour lives entirely in the prompt body above (there is no `
 Fires on: "ask codex", "consult codex", "second opinion", "what does codex think".
 
 ```bash
-codex exec --skip-git-repo-check "$(cat <<'EOF'
+CLAUDE_SPAWN=1 CLAUDE_SESSION_ID="<claude-session-id>" CLAUDE_PROJECT="<project-root>" codex exec --skip-git-repo-check "$(cat <<'EOF'
 [FILESYSTEM BOUNDARY: do NOT read ~/.claude/, ~/.agents/, .claude/skills/, agents/]
 
 <the question, with full context>
@@ -158,7 +184,7 @@ Default reasoning effort: `medium` for consult (large context, interactive, need
 When the router routes a code-artifact task to Codex (per the code-routing rule in AGENTS.md hard rule #5 — Codex is the default code lane):
 
 ```bash
-codex exec --skip-git-repo-check "$(cat <<'EOF'
+CLAUDE_SPAWN=1 CLAUDE_SESSION_ID="<claude-session-id>" CLAUDE_PROJECT="<project-root>" codex exec --skip-git-repo-check "$(cat <<'EOF'
 [FILESYSTEM BOUNDARY: do NOT read ~/.claude/, ~/.agents/, .claude/skills/, agents/]
 
 Write <file path> implementing:

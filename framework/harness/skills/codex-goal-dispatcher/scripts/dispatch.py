@@ -62,6 +62,37 @@ def iso_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
+def resolve_claude_session_id() -> str:
+    for key in ("CLAUDE_SESSION_ID", "CLAUDECODE_SESSION_ID", "CLAUDE_CODE_SESSION_ID"):
+        val = os.environ.get(key, "").strip()
+        if val:
+            return val
+
+    token_file = Path(tempfile.gettempdir()) / f"claude-session-{os.getppid()}.txt"
+    try:
+        if token_file.exists():
+            token = token_file.read_text(encoding="utf-8").strip()
+            if token:
+                return token
+    except Exception:
+        pass
+
+    token = f"claude-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}-{os.getppid()}"
+    try:
+        token_file.write_text(token, encoding="utf-8")
+    except Exception:
+        pass
+    return token
+
+
+def build_claude_spawn_env(project_dir: Path, claude_session_id: str) -> dict[str, str]:
+    env = os.environ.copy()
+    env["CLAUDE_SPAWN"] = "1"
+    env["CLAUDE_SESSION_ID"] = claude_session_id
+    env["CLAUDE_PROJECT"] = str(project_dir)
+    return env
+
+
 def write_status(status_file: Path, payload: dict) -> None:
     status_file.parent.mkdir(parents=True, exist_ok=True)
     status_file.write_text(json.dumps(payload, indent=2), encoding="utf-8")
@@ -179,6 +210,7 @@ def run_headless(
     status: dict,
     headless_prompt: str,
     budget_min: int,
+    spawn_env: dict[str, str],
 ) -> int:
     """Run `codex exec` to completion in-process. HANDS-FREE — no terminal, no keystroke.
 
@@ -230,6 +262,7 @@ def run_headless(
             cwd=str(project_dir),
             capture_output=True,
             timeout=timeout_sec,
+            env=spawn_env,
         )
         rc = proc.returncode
         out = (proc.stdout or b"").decode("utf-8", "replace")
@@ -275,7 +308,14 @@ def run_headless(
     return rc if rc is not None else 1
 
 
-def write_run_launcher(run_dir: Path, seed_prompt: str, aos_session_id: str, codex_bin: str) -> Path:
+def write_run_launcher(
+    run_dir: Path,
+    seed_prompt: str,
+    aos_session_id: str,
+    codex_bin: str,
+    claude_session_id: str,
+    claude_project: Path,
+) -> Path:
     """Write the per-run .bat that launches the RESOLVED codex binary (not bare `codex`)."""
     launcher = run_dir / "run-goal.bat"
     body = (
@@ -284,6 +324,9 @@ def write_run_launcher(run_dir: Path, seed_prompt: str, aos_session_id: str, cod
         f'cd /d "{run_dir.parent.parent.parent}"\r\n'
         f"set AOS_SESSION_ID={aos_session_id}\r\n"
         "set AOS_AGENT=codex\r\n"
+        "set \"CLAUDE_SPAWN=1\"\r\n"
+        f"set \"CLAUDE_SESSION_ID={claude_session_id}\"\r\n"
+        f"set \"CLAUDE_PROJECT={claude_project}\"\r\n"
         "echo [codex-goal] Starting goals loop. Codex will read the plan on its first turn.\r\n"
         f"echo [codex-goal] Binary: {codex_bin}\r\n"
         "echo [codex-goal] Approvals + sandbox bypassed (--dangerously-bypass-approvals-and-sandbox).\r\n"
@@ -386,6 +429,8 @@ def dispatch(args: argparse.Namespace) -> int:
     seed_prompt = build_seed_prompt(prompt_file)
     goal_id = f"{datetime.now().strftime('%Y%m%d-%H%M%S')}-{project_dir.name}"
     aos_session_id = f"codex-goal-{goal_id}"
+    claude_session_id = resolve_claude_session_id()
+    spawn_env = build_claude_spawn_env(project_dir, claude_session_id)
 
     mode = getattr(args, "mode", "gate")
     cadence = getattr(args, "cadence", None)
@@ -409,6 +454,8 @@ def dispatch(args: argparse.Namespace) -> int:
         "wt_window_name": aos_session_id,
         "codex_binary": codex_bin,
         "codex_binary_source": how,
+        "claude_session_id": claude_session_id,
+        "claude_project": str(project_dir),
         "terminal": None,
         "pid": None,
     }
@@ -447,9 +494,17 @@ def dispatch(args: argparse.Namespace) -> int:
             status=initial_status,
             headless_prompt=headless_prompt,
             budget_min=args.budget_min,
+            spawn_env=spawn_env,
         )
 
-    launcher_bat = write_run_launcher(prompt_file.parent, seed_prompt, aos_session_id, codex_bin)
+    launcher_bat = write_run_launcher(
+        prompt_file.parent,
+        seed_prompt,
+        aos_session_id,
+        codex_bin,
+        claude_session_id,
+        project_dir,
+    )
     terminal, _ = find_terminal()
     print(f"[dispatch] terminal chosen: {terminal}")
     cmd = build_spawn_command(terminal, project_dir, launcher_bat, aos_session_id)

@@ -113,6 +113,7 @@ python "C:/Users/<you>/.claude/skills/codex-goal-dispatcher/scripts/dispatch.py"
 The script:
 - Opens a new Windows Terminal tab in the project dir (or new `cmd` window if `wt` missing)
 - Seeds Codex with `codex --enable goals "$(< prompt_file)"`
+- Exports `CLAUDE_SPAWN=1`, `CLAUDE_SESSION_ID=<current Claude session>`, and `CLAUDE_PROJECT=<project>` into the spawned Codex environment so the breadcrumb hook can upsert spawn findings for `/handoff`
 - Once Codex starts and the prompt is loaded, the user types `/goal use goal to implement this`
 - Writes spawn metadata to status.json
 
