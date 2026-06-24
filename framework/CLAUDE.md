@@ -23,11 +23,11 @@ Every task gets the right-sized surface, deliberately chosen, not by reflex:
 
 **Standalone keepers (called direct):** `investigate`, `cso`, `context-audit`, `windows-launcher`, `printing-press-router`.
 
-**On-demand mechanics (load only when the task calls for it):** `web-scrape`, `build`, `mobile-app`, `ship`, `seo`, `design-studio`, `plan-room`, `content-forge`, `morning-briefing`, `video-scan`, `skill-forge`.
+**On-demand mechanics (load only when the task calls for it):** `web-scrape`, `build`, `mobile-app`, `ship`, `seo`, `design-studio`, `plan-room`, `content-forge`, `morning-briefing`, `video-scan`, `skill-forge`, `loop-engineering`.
 
 ## Hard reminders (full text in AGENTS.md)
 
-- Nothing runs on its own. The user triggers everything.
+- Autonomy is opt-in: the user may stand up unlimited automations; the only brakes are the 10M/day token circuit breaker and the `HALT` kill-switch (see `_system/automations/`). Skills still never self-schedule.
 - Codex is the default code lane; Claude steps in when needed (preference, not a hard stop).
 - Cost-first scraping: Firecrawl → Cloak Browser → local drivers.
 - No permission prompts by default. Never return `permissionDecision: "ask"` from a default-on hook.

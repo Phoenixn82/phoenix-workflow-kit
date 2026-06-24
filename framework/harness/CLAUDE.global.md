@@ -118,7 +118,7 @@ Codex and you share a low-token bridge on this machine so either side can pick u
 
 **Dispatching Codex (the primary flow the user wants).** the user talks to you; you point implementation work at Codex (opening a Codex session or a `/goal` run). When you dispatch, **name the exact tools/skills/plugins/MCPs** Codex needs — Codex parity-checks any tool you name (`AI_Projects/_system/tool-parity/tool_parity.py check <tool>`) and will bridge it or fail loudly if it can't, which is what keeps you two one-to-one. Expect Codex to report back (a manifest, or a `.codex-claude-handoff/*.done.md` if you used the formal request flow) and route its own vault updates; surface that report to the user when it lands.
 
-**No background spend.** Everything here is triggered/turn-based (AGENTS hard rule #1). The hooks fire only on your tool calls and prompts; nothing polls while the user is away.
+**No background spend.** Everything here is triggered/turn-based (AGENTS hard rule #1). The hooks fire only on your tool calls and prompts; nothing polls while the user is away. Standing automations the user explicitly creates are governed separately by `_system/automations/` (budget circuit breaker + registry), not by this bridge.
 
 # GitHub public-push safety gate (DEFAULT for all projects)
 Going public is the only GitHub action that is a "big deal" — public exposure is hard to reverse (caches, clones, forks). Private repos don't matter. Enforced both as native knowledge (this rule) and, once built, a local git `pre-push` hook + a visibility-flip wrapper living in the `guard` mechanic.

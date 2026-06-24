@@ -17,7 +17,7 @@ Proposes video / content cards the user might want in the morning briefing or to
 
 Don't fire when:
 - The user has a specific video URL → that's `video-scan` (different lane)
-- The user wants automated daily curation → push back per hard rule #1
+- The user wants automated daily curation → that's a sanctioned automation; offer to register it under `_system/automations/` (rule #1), don't refuse
 
 ---
 

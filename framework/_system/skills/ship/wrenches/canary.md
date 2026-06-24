@@ -7,7 +7,7 @@ description: Post-deploy canary monitoring wrench. Watches the live app for cons
 
 After a deploy lands, the canary opens a watchful window on production. It periodically takes screenshots, checks console for errors, samples critical pages, and surfaces regressions. The window closes when it ends (no infinite loops, no recurring schedule).
 
-Per AGENTS.md hard rule #1, this wrench is finite by design. The user triggers it; it runs; it ends.
+Per AGENTS.md rule #1, this wrench is finite by design and never self-schedules: the user triggers it; it runs; it ends. (If the user wants ongoing monitoring, that's a separate registered automation under `_system/automations/`, not a behavior of this wrench.)
 
 ---
 

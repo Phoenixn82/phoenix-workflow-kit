@@ -57,3 +57,4 @@ For other wrenches consuming this, it's a function call — they ask "give me a 
 - [design-consultation.md](design-consultation.md) — uses this for system decisions
 - [design-html.md](design-html.md) — uses this for pattern selection
 - [awesome-design.md](awesome-design.md) — alternative: pick a full brand DNA instead
+- [../patterns-library/DATA-UI-CRAFT.md](../patterns-library/DATA-UI-CRAFT.md) — stored craft declaratives for dashboard/table/admin/app UI (consult for the "dashboard, admin, ecommerce" product types and "tables" patterns above)

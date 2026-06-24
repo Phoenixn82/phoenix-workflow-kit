@@ -22,6 +22,7 @@ The right tool deliberately chosen, not a reflex. When unclear, run `skill-scout
 | **Build a backend** | `project-orchestrator` → build + cso inline + ship | Claude architects, Codex writes, Gemini reads specs | cso runs inline during build, not after |
 | **UI / bug testing on an app** | `chrome-devtools-mcp` for live driving + `codex-goal-dispatcher` for the iteration loop | Codex (goal loop) | Bulk iterative bug-bash is exactly what codex-goal-dispatcher exists for |
 | **Major audit of a project** | `project-orchestrator` audit-everything mode → cso + review + investigate + angry-code-auditor (parallel, via Codex) | Codex runs the angry sweep, Claude synthesizes | All critical-bug-finding lenses paired. Codex does the heavy auditing so Claude tokens stay free |
+| **Autonomous backlog / agent loops (triage tickets, issue→PR)** | `loop-engineering` mechanic → backlog-manager (manager) + issue-to-pr (worker) | Codex via Codex Automations (subscription) | GitHub Issues as control plane; manager files evidence-backed tickets, worker opens draft PRs (never merges); budget-gated by `_system/automations/` |
 | **Research / first-pass intake** | `router` → Gemini lane (long context + grounded search) → `second-brain` saves findings | Gemini | Heavy reading is cheap; doesn't burn Claude tokens |
 | **Bulk menial work cheaply** | `router` → freellm lane with task preset (`cheap`, `code`, `fast`, etc.) | freellm | Lowest cost lane that meets the bar |
 | **"Should I" / stuck on a decision** | `plan-room` → `decision-toolkit` wrench | Claude | Reversibility triage (Bezos 1/2 door) + right framework + kill criteria + review date |
@@ -53,5 +54,5 @@ The right tool deliberately chosen, not a reflex. When unclear, run `skill-scout
 - **Always-core at session start:** `router`, `second-brain`, `guard`. Everything else on-demand.
 - **Claude thinks, Codex does.** When ambiguous, ask. When implementation work appears, dispatch to Codex via router. Don't grind code in Claude.
 - **No errors twice.** Every error → root-cause → fix → stored in second-brain as "what / cause / fix / prevention".
-- **No timers.** Nothing self-starts. Triggered deep work via the orchestrator is the goal; self-starting work is banned.
+- **Autonomy is opt-in.** No skill self-starts, but the user may stand up unlimited automations — budget-gated by `_system/automations/` (10M/day circuit breaker + `HALT` kill-switch). See AGENTS.md rule #1.
 - **Cost-first scraping.** Firecrawl → Cloak Browser → local drivers. Always.

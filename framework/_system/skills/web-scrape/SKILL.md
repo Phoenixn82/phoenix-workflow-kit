@@ -23,7 +23,7 @@ The cost ladder is not a capability ladder. Firecrawl can render JS, hold a brow
 
 5. **Save what's worth saving to second-brain.** Recurring scrape targets, working selectors, and anti-bot patterns that broke through → the project's own vault note (`Projects/<slug>/`). Cost-vs-result fall-through lessons are written automatically by `scrape-lesson-log.py` to `Projects/<slug>/tokens.md` (the per-project token-expense ledger). Don't re-learn the same site twice, and don't leave the next Claude blind to "we already tried Firecrawl on this domain, it bot-blocks, go straight to Cloak." (The default tier order itself lives at `_system/second-brain/Actions/scraping-tier.md`.)
 
-6. **Never auto-loop on scraping.** Per AGENTS.md hard rule #1, nothing runs on its own. A 500-URL crawl is fine because the user triggered it. A recurring "watch this site for changes" is NOT fine. If the user wants change-detection, surface that he needs to run the scrape on his command, or build it into a Codex `/goal` loop he kicks off manually.
+6. **Don't self-loop on scraping.** Per AGENTS.md rule #1, no skill self-schedules. A 500-URL crawl is fine because the user triggered it. A recurring "watch this site for changes" is fine too — but only as an automation the user explicitly stands up and registers under `_system/automations/` (budget-gated), never one the scraper starts on its own.
 
 ---
 

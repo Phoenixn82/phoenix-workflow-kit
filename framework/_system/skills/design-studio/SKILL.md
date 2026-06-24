@@ -27,6 +27,8 @@ Per AGENTS.md, plan happens before design; design happens before build. The user
 
 6. **Codex writes the integration code, not Claude.** Per AGENTS.md hard rule #5, when designs translate to production code (Tailwind tokens to design system, React components from mockups), Codex writes the code. Claude does the design + spec.
 
+7. **Data-dense UI is craft, not variety.** For dashboards, admin, tables, activity feeds, and app surfaces — anything built to display/operate on data — consult [`patterns-library/DATA-UI-CRAFT.md`](patterns-library/DATA-UI-CRAFT.md) **in addition to** the STRUCTURE×STYLE×STACK variety axes. The three variety libraries stop sameness; this one stops "looks good in a screenshot, breaks when you use it" (let the data drive the form, disclose progressively, build the invisible UI). Skip it for marketing/landing pages.
+
 ---
 
 ## The DRIP pipeline
@@ -132,6 +134,7 @@ The user can call individual wrenches direct. The dispatcher walks DRIP by defau
 - [wrenches/ui-ux-pro-max.md](wrenches/ui-ux-pro-max.md) — design knowledge guidance
 - [layout-library/ARCHETYPES.md](layout-library/ARCHETYPES.md) — STRUCTURE axis (layout archetypes for design variety)
 - [framework-library/FRAMEWORKS.md](framework-library/FRAMEWORKS.md) — STACK axis (framework/tooling combos for design variety)
+- [patterns-library/DATA-UI-CRAFT.md](patterns-library/DATA-UI-CRAFT.md) — CRAFT reference (data-dense/dashboard/app UI; function, not variety)
 - [wrenches/deck-builder.md](wrenches/deck-builder.md) — decks (HTML or Marp)
 - [wrenches/stitch.md](wrenches/stitch.md) — Google Stitch
 - [wrenches/make-pdf.md](wrenches/make-pdf.md) — publication PDFs

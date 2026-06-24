@@ -20,7 +20,7 @@ Per AGENTS.md hard rule #1, this runs on-demand — not on a schedule.
 
 Don't fire when:
 - No prior baseline + nothing to compare → just capture baseline
-- Continuous monitoring wanted → push back per hard rule #1
+- Continuous monitoring wanted → that's a sanctioned automation; offer to register it under `_system/automations/` (rule #1)
 
 ---
 

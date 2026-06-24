@@ -159,12 +159,46 @@ def run(
     return cp
 
 
+def shim_argv(tool_path: str, rest_args: list[str]) -> list[str]:
+    suffix = Path(tool_path).suffix.casefold()
+    if os.name == "nt" and suffix in {".cmd", ".bat"}:
+        return ["cmd", "/c", tool_path, *rest_args]
+    if os.name == "nt" and suffix == ".ps1":
+        return ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", tool_path, *rest_args]
+    return [tool_path, *rest_args]
+
+
+def sort_newest(paths: Iterable[Path]) -> list[Path]:
+    return sorted(paths, key=lambda path: path.stat().st_mtime if path.exists() else 0, reverse=True)
+
+
+def codex_windows_exes() -> list[str]:
+    if os.name != "nt":
+        return []
+
+    candidates: list[Path] = []
+    appdata = os.environ.get("APPDATA")
+    if appdata:
+        npm_node_modules = Path(appdata) / "npm" / "node_modules" / "@openai" / "codex" / "node_modules"
+        candidates.extend(sort_newest(npm_node_modules.glob("@openai/codex-*/vendor/**/codex.exe")))
+
+    localappdata = os.environ.get("LOCALAPPDATA")
+    if localappdata:
+        codex_bin = Path(localappdata) / "OpenAI" / "Codex" / "bin"
+        candidates.extend(sort_newest(codex_bin.glob("*/codex.exe")))
+        candidates.append(codex_bin / "codex.exe")
+
+    return [str(path) for path in candidates if path.exists()]
+
+
 def find_tool(name: str) -> str | None:
     if name == "codex":
         preferred = [os.environ.get("CODEX_CLI_PATH"), *TOOL_PATHS.get("codex", [])]
         for candidate in preferred:
             if candidate and Path(candidate).exists():
                 return candidate
+        for candidate in codex_windows_exes():
+            return candidate
     if os.name == "nt":
         for suffix in (".exe", ".cmd", ".bat", ""):
             found = shutil.which(name + suffix)
@@ -218,7 +252,7 @@ def github_visibility(owner_repo: str, gh: str, args: argparse.Namespace) -> str
     if forced:
         return forced
 
-    cp = run([gh, "repo", "view", owner_repo, "--json", "visibility"], timeout=30)
+    cp = run(shim_argv(gh, ["repo", "view", owner_repo, "--json", "visibility"]), timeout=30)
     if cp.returncode != 0:
         output = f"{cp.stdout}\n{cp.stderr}".lower()
         if "could not resolve to a repository" in output or "not found" in output or "http 404" in output:
@@ -269,7 +303,7 @@ def git_lines(args: list[str], *, timeout: int = 60) -> list[str]:
 
 def default_branch(owner_repo: str, remote_name: str, gh: str | None) -> str | None:
     if not os.environ.get("GUARD_FORCE_VISIBILITY") and gh:
-        cp = run([gh, "repo", "view", owner_repo, "--json", "defaultBranchRef"], timeout=30)
+        cp = run(shim_argv(gh, ["repo", "view", owner_repo, "--json", "defaultBranchRef"]), timeout=30)
         if cp.returncode == 0:
             try:
                 branch = json.loads(cp.stdout)["defaultBranchRef"]["name"]
@@ -485,20 +519,22 @@ def gitleaks_scan(plan: ScanPlan, gitleaks: str) -> list[Finding]:
     for log_opts in plan.log_opts:
         with tempfile.TemporaryDirectory(prefix="public-push-gate-") as temp_dir:
             report_path = Path(temp_dir) / "gitleaks.json"
-            cmd = [
+            cmd = shim_argv(
                 gitleaks,
-                "git",
-                "--no-banner",
-                "--redact",
-                "--exit-code",
-                "1",
-                "--report-format",
-                "json",
-                "--report-path",
-                str(report_path),
-                "--log-opts",
-                log_opts,
-            ]
+                [
+                    "git",
+                    "--no-banner",
+                    "--redact",
+                    "--exit-code",
+                    "1",
+                    "--report-format",
+                    "json",
+                    "--report-path",
+                    str(report_path),
+                    "--log-opts",
+                    log_opts,
+                ],
+            )
             cp = run(cmd, timeout=180)
             if cp.returncode not in (0, 1):
                 raise GateBlock(f"gitleaks failed for {log_opts}:\n{cp.stderr.strip() or cp.stdout.strip()}")
@@ -553,18 +589,20 @@ or
         schema_path.write_text(json.dumps(CODEX_VERDICT_SCHEMA), encoding="utf-8")
         try:
             cp = subprocess.run(
-                [
+                shim_argv(
                     codex,
-                    "exec",
-                    "--skip-git-repo-check",
-                    "--ignore-rules",
-                    "--ephemeral",
-                    "--model",
-                    model,
-                    "--output-schema",
-                    str(schema_path),
-                    prompt,
-                ],
+                    [
+                        "exec",
+                        "--skip-git-repo-check",
+                        "--ignore-rules",
+                        "--ephemeral",
+                        "--model",
+                        model,
+                        "--output-schema",
+                        str(schema_path),
+                        prompt,
+                    ],
+                ),
                 cwd=str(codex_cwd),
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
@@ -656,7 +694,7 @@ def publicize(args: argparse.Namespace) -> int:
     owner_repo = args.repo
     if not owner_repo:
         gh = require_tool("gh")
-        cp = run([gh, "repo", "view", "--json", "nameWithOwner"], timeout=30, check=True)
+        cp = run(shim_argv(gh, ["repo", "view", "--json", "nameWithOwner"]), timeout=30, check=True)
         owner_repo = json.loads(cp.stdout)["nameWithOwner"]
 
     if override_enabled():

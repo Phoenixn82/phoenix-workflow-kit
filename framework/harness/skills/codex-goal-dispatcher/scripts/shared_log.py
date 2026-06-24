@@ -75,6 +75,14 @@ def tail(project_root: Path, lines: int) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # Force UTF-8 stdout/stderr so tailing a log with non-cp1252 chars (e.g. '→')
+    # doesn't crash on Windows consoles whose code page is cp1252.
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
 
