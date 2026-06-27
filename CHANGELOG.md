@@ -1,5 +1,10 @@
 ﻿# Changelog
 
+## 2026-06-27 - Codex spawn findings harvester and notify hook
+
+- codex-spawn-findings consumer: new `harvest_spawn_findings.py` (grab-all → one isolated codex digest → mark-consumed), wired as a non-skippable handoff Step 1.5.
+- codex-spawn-findings producer: fixed `codex-turn-notify.py` for codex-cli 0.141 (session-id key now `thread-id`; rollout lookup made date-proof — local vs UTC).
+
 ## 2026-06-22 - YAGNI ladder, handoff sync, public push gate
 
 - Added the YAGNI decision ladder to global coding Rule 2.

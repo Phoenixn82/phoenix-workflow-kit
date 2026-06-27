@@ -35,7 +35,7 @@ $AIP      = Join-Path $HOMEDIR "Desktop\AI_Projects"
 $ExcludeDirs  = @("__pycache__","node_modules",".git","logs","state","pipeline","tests","secrets","_staging","voice-corpus",".secrets","claude_vault",".codex")
 # Gmail-sender harness scripts are intentionally NOT shipped (operator: not in current workflow;
 # carried a real address in a docstring example). .mailsvc-token is their runtime IPC nonce.
-$ExcludeFiles = @("*.log",".claude-codex-log.md","desktop.ini","Thumbs.db",".DS_Store","denylist.local.json","send_gmail.py","mail_sender_service.py",".mailsvc-token")
+$ExcludeFiles = @("*.log",".claude-codex-log.md","desktop.ini","Thumbs.db",".DS_Store","denylist.local.json","test_public_push_gate_allowlist.py","send_gmail.py","mail_sender_service.py",".mailsvc-token")
 
 function Sync-Tree($src, $dst) {
   if (-not (Test-Path $src)) { Write-Warning "skip (missing source): $src"; return }

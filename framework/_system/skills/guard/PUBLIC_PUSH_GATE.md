@@ -19,6 +19,12 @@ The gate is trigger-based. It runs only when a human pushes or asks the wrapper 
 
 Any deterministic secret or denylist hit is an automatic failure. Codex prose cannot override those findings.
 
+## Allowlist (Repo-Scoped Exceptions)
+
+`scripts/denylist.local.json` may include an optional top-level `allowlist` array for deliberately public contact info in specific repos. Each entry has a `regex`, optional `label`, optional `case_sensitive`, and optional `repos` list such as `["owner/repo"]`.
+
+Allowlist entries suppress only personal-data findings emitted by the configured denylist. Phones are matched only through enumerated denylist entries, such as the user's own phone number, not a catch-all phone heuristic. Allowlist entries never suppress `gitleaks` secret findings. Repo names are compared case-insensitively; omit `repos` only for an exception that is safe in every repo.
+
 ## Override
 
 For a single deliberate push or publicize operation:

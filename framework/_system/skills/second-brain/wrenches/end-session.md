@@ -35,13 +35,24 @@ Walk the session's history and pull out every instance of each category. Don't p
 
 Walk the session chronologically. For each turn, mark which of the 9 categories apply. A single turn often hits multiple categories (a correction that becomes a preference, a decision that resolves an open loop).
 
-### Step 1.5: Harvest Codex spawn-findings.
+### Step 1.5: Harvest Codex spawn-findings — ALWAYS run the script, every handoff.
 
-1. Look for `<project>/.codex-spawn-findings/<this-claude-session-id>.jsonl`. If absent or all rows `consumed:true`, skip the step (note "no Codex spawn-findings this session").
-2. Collect the unconsumed breadcrumbs' `rollout_path`s.
-3. Spawn **one** `codex exec` with `CODEX_BREADCRUMB_DISABLE=1` and the standard filesystem-boundary prompt prefix. Prompt: read the listed rollout JSONL transcript(s) and emit a findings digest, applying the wrench's discard rules (no raw code, no trivia, no errors-without-fixes, no junk). Categorize each finding by the 9-category scheme (decisions / preferences / errors+fix / tokens / status / new-skills / open-loops / corrections). Write the digest to `<project>/.codex-spawn-findings/<claude-session-id>.digest.md`.
-4. Claude reads the digest and folds the worthy items into the Step-2 draft as a clearly-labeled group: **"Codex spawn findings (pending approval)"**, attributed to Codex, with the source `codex_session_id` noted per item.
-5. After the user's Step-3 approval and Step-4 write, set `consumed:true` on the harvested breadcrumbs.
+This step is **deterministic code, not a remembered procedure** — the prose version was silently skipped for weeks and breadcrumbs piled up unconsumed. Run the harvester script unconditionally. It drains *all* unconsumed breadcrumbs project-wide (not just this session's `*.jsonl`), so Codex findings from any earlier session — including `unknown-claude-session.jsonl` — are also captured.
+
+1. Run (always, before building the Step-2 draft):
+   ```powershell
+   python "C:\Users\<you>\Desktop\AI_Projects\_system\skills\second-brain\scripts\harvest_spawn_findings.py" --project "C:\Users\<you>\Desktop\AI_Projects"
+   ```
+   The script: bounded-scans the project's `.codex-spawn-findings/` dirs → collects every unconsumed breadcrumb → runs **one** isolated `codex exec` (with `CODEX_BREADCRUMB_DISABLE=1`, `CLAUDE_SPAWN`/`CLAUDE_SESSION_ID` stripped — the load-bearing recursion guard, no breadcrumb of its own) over the referenced rollout transcripts → writes a 9-category digest to `<root>/.codex-spawn-findings/_harvest-<UTC>.digest.md` with a trailing `<!-- HARVEST_KEYS ... -->` block recording exactly which rows it covered.
+2. Interpret stdout:
+   - `NO_PENDING` → note "no Codex spawn-findings this session"; skip the rest of this step.
+   - `DIGEST: <path>` → read `<path>` and fold its findings (everything above the `HARVEST_KEYS` comment) into the Step-2 draft as **"Codex spawn findings (pending approval)"**, attributed to Codex with the source `codex_session_id` per item.
+   - Non-zero exit / `ERROR:` on stderr → digest did NOT write; surface the error, fabricate nothing, mark nothing.
+3. After the user's Step-3 approval and Step-4 write, retire the harvested rows (this is what flips them to `consumed:true` so they never re-surface):
+   ```powershell
+   python "C:\Users\<you>\Desktop\AI_Projects\_system\skills\second-brain\scripts\harvest_spawn_findings.py" --mark-consumed --digest "<path>"
+   ```
+   Expect `MARKED: <n>`. If the user rejects the entire Codex group, skip the mark step (leave them for a future handoff).
 
 ### Step 2: Build the draft
 

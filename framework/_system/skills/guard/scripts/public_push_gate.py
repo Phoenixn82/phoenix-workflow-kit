@@ -46,12 +46,9 @@ class GateSkip(Exception):
 
 
 DENYLIST: list[tuple[str, re.Pattern[str]]] = []
+ALLOWLIST: list[tuple[str, re.Pattern[str], frozenset[str] | None]] = []
 TOOL_PATHS: dict[str, list[str]] = {}
 
-PHONE_PATTERN = re.compile(
-    r"(?i)(?:phone|mobile|cell|call|text|tel)[^\n]{0,40}"
-    r"(?:\+?1[\s.\-]?)?(?:\(?\d{3}\)?[\s.\-]?)\d{3}[\s.\-]?\d{4}"
-)
 REAL_ONEDRIVE_PATH = re.compile(
     r"(?i)\b[A-Z]:\\Users\\(?P<user>[^\\\s<>]+)\\OneDrive(?:\\|$)"
 )
@@ -85,11 +82,12 @@ def selected_config_path() -> Path | None:
 
 
 def load_config() -> None:
-    global DENYLIST, TOOL_PATHS
+    global DENYLIST, ALLOWLIST, TOOL_PATHS
 
     path = selected_config_path()
     if not path:
         DENYLIST = []
+        ALLOWLIST = []
         TOOL_PATHS = {}
         return
 
@@ -120,6 +118,32 @@ def load_config() -> None:
         except re.error as exc:
             raise GateBlock(f"invalid regex in denylist entry {idx} ({label}): {exc}") from exc
 
+    allowlist_entries = raw.get("allowlist", [])
+    if not isinstance(allowlist_entries, list):
+        raise GateBlock(f"allowlist config field must be a list: {path}")
+
+    compiled_allowlist: list[tuple[str, re.Pattern[str], frozenset[str] | None]] = []
+    for idx, entry in enumerate(allowlist_entries, start=1):
+        if not isinstance(entry, dict):
+            raise GateBlock(f"allowlist entry {idx} must be an object: {path}")
+        if entry.get("disabled"):
+            continue
+        label = str(entry.get("label") or f"allowlist entry {idx}")
+        regex = entry.get("regex")
+        if not isinstance(regex, str) or not regex:
+            raise GateBlock(f"allowlist entry {idx} missing regex: {path}")
+        repos = None
+        if "repos" in entry:
+            raw_repos = entry.get("repos")
+            if not isinstance(raw_repos, list):
+                raise GateBlock(f"allowlist entry {idx} repos must be a list: {path}")
+            repos = frozenset(str(repo).casefold() for repo in raw_repos if str(repo).strip())
+        flags = 0 if entry.get("case_sensitive") else re.IGNORECASE
+        try:
+            compiled_allowlist.append((label, re.compile(regex, flags), repos))
+        except re.error as exc:
+            raise GateBlock(f"invalid regex in allowlist entry {idx} ({label}): {exc}") from exc
+
     raw_tool_paths = raw.get("tool_paths", {})
     if raw_tool_paths and not isinstance(raw_tool_paths, dict):
         raise GateBlock(f"tool_paths config field must be an object: {path}")
@@ -131,6 +155,7 @@ def load_config() -> None:
         paths[str(name)] = [str(value) for value in values if value]
 
     DENYLIST = compiled
+    ALLOWLIST = compiled_allowlist
     TOOL_PATHS = paths
 
 
@@ -456,15 +481,25 @@ def should_report_match(label: str, match: re.Match[str], text: str, owner_repo:
     return True
 
 
+def is_allowlisted_personal_match(match_text: str, owner_repo: str) -> bool:
+    normalized_repo = owner_repo.casefold()
+    for _label, pattern, repos in ALLOWLIST:
+        if repos is not None and normalized_repo not in repos:
+            continue
+        if pattern.search(match_text):
+            return True
+    return False
+
+
 def scan_text(source: str, location: str, text: str, owner_repo: str) -> list[Finding]:
     findings: list[Finding] = []
     for label, pattern in DENYLIST:
         for match in pattern.finditer(text):
             if not should_report_match(label, match, text, owner_repo):
                 continue
+            if is_allowlisted_personal_match(match.group(0), owner_repo):
+                continue
             findings.append(Finding(source, location, label, safe_excerpt(text, match.start(), match.end())))
-    for match in PHONE_PATTERN.finditer(text):
-        findings.append(Finding(source, location, "possible personal phone", safe_excerpt(text, match.start(), match.end())))
     return findings
 
 

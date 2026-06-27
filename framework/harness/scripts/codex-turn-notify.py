@@ -123,16 +123,23 @@ def _utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def _today_rollout_dir() -> str:
-    now = datetime.now(timezone.utc)
-    return os.path.join(
-        os.path.expanduser("~"),
-        ".codex",
-        "sessions",
-        now.strftime("%Y"),
-        now.strftime("%m"),
-        now.strftime("%d"),
-    )
+SESSIONS_ROOT = os.path.join(os.path.expanduser("~"), ".codex", "sessions")
+
+
+def _recent_rollout_dirs() -> list[str]:
+    """Day dirs to scan for rollouts. Codex names them by LOCAL date, but this
+    hook can run when UTC and local dates differ (evenings in western TZs), so
+    check today+yesterday for BOTH local and UTC. Existing dirs only."""
+    from datetime import timedelta
+
+    dirs: list[str] = []
+    for base in (datetime.now(), datetime.now(timezone.utc)):
+        for delta in (0, 1):
+            d = base - timedelta(days=delta)
+            path = os.path.join(SESSIONS_ROOT, d.strftime("%Y"), d.strftime("%m"), d.strftime("%d"))
+            if path not in dirs and os.path.isdir(path):
+                dirs.append(path)
+    return dirs
 
 
 def _rollout_matches_cwd(path: str, cwd: str) -> bool:
@@ -159,19 +166,23 @@ def _session_id_from_rollout(path: str) -> str:
 
 
 def _find_rollout(codex_session_id: str, cwd: str) -> tuple[str, str]:
-    root = _today_rollout_dir()
-    if not os.path.isdir(root):
-        return codex_session_id, ""
-
+    # Primary: id-based match anywhere under the sessions tree (date-proof — the
+    # rollout filename embeds the thread/session id, so we don't depend on which
+    # day dir codex chose).
     if codex_session_id:
-        matches = glob(os.path.join(root, f"rollout-*{codex_session_id}*.jsonl"))
+        matches = glob(os.path.join(SESSIONS_ROOT, "*", "*", "*", f"rollout-*{codex_session_id}*.jsonl"))
         if matches:
             newest = max(matches, key=lambda p: os.path.getmtime(p))
             return codex_session_id, newest
 
-    candidates = glob(os.path.join(root, "rollout-*.jsonl"))
+    # Fallback (no id in payload): newest rollout across recent day dirs that
+    # matches cwd; if cwd filtering empties the set, take the newest overall.
+    candidates: list[str] = []
+    for day_dir in _recent_rollout_dirs():
+        candidates.extend(glob(os.path.join(day_dir, "rollout-*.jsonl")))
     if cwd:
-        candidates = [p for p in candidates if _rollout_matches_cwd(p, cwd)]
+        matched = [p for p in candidates if _rollout_matches_cwd(p, cwd)]
+        candidates = matched or candidates
     if not candidates:
         return codex_session_id, ""
     newest = max(candidates, key=lambda p: os.path.getmtime(p))
@@ -214,7 +225,14 @@ def _upsert_spawn_breadcrumb(payload: dict | None) -> None:
         return
 
     cwd = _pick(payload, "cwd", "workdir", "working_directory", "project")
-    codex_session_id = _pick(payload, "conversation-id", "session-id", "session_id")
+    # codex-cli 0.141 renamed the session id key to "thread-id"; keep the older
+    # names as fallbacks for forward/backward compat.
+    codex_session_id = _pick(
+        payload,
+        "thread-id", "thread_id",
+        "conversation-id", "conversation_id",
+        "session-id", "session_id",
+    )
     codex_session_id, rollout_path = _find_rollout(codex_session_id, cwd)
     if not codex_session_id:
         return

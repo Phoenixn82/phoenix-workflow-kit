@@ -22,6 +22,17 @@
       "disabled": true
     }
   ],
+  "_allowlist_comment": "Repo-scoped exceptions for intended-public personal data. These suppress denylist/phone findings only, never gitleaks secret findings.",
+  "allowlist": [
+    {
+      "label": "example public contact email",
+      "regex": "\\bpublic@example\\.com\\b",
+      "repos": [
+        "owner/repo"
+      ],
+      "disabled": true
+    }
+  ],
   "tool_paths": {
     "codex": [
       "C:\\\\Users\\\\<you>\\\\AppData\\\\Local\\\\OpenAI\\\\Codex\\\\bin\\\\<version>\\\\codex.exe"

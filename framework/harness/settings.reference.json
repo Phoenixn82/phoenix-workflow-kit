@@ -195,5 +195,6 @@
       "$defaults"
     ]
   },
-  "autocompact_percentage_override": 75
+  "autocompact_percentage_override": 75,
+  "tui": "fullscreen"
 }
