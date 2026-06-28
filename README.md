@@ -83,17 +83,6 @@ phoenix-workflow-kit/
 └── tools/                          ← how I keep this repo in sync (you can ignore these)
 ```
 
----
-
-## What's deliberately **left out** (privacy)
-
-This kit is the *machinery*, never the *data*. Excluded by design:
-
-- The second-brain vault content (my projects, decisions, people, business data)
-- All secrets, API keys, and tokens
-- AI auth/config files and `.env` files
-- Runtime logs and session state
-
 Paths inside the framework are placeholders (`C:\Users\<you>\...`) and the operator is
 generalized as "the user" — your AI rewrites both for your environment during adoption.
 
