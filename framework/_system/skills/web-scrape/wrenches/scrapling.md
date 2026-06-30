@@ -25,19 +25,32 @@ Scrapling can't manage locally; Firecrawl remains tier 1 for plain extraction.
 
 ## Install state (this box)
 
-Installed in a dedicated venv so it never pollutes global Python:
+Installed in a dedicated venv so it never pollutes global Python. The venv itself is not
+committed; recreate it from `requirements-scrapling.txt` with the self-healing wrapper:
 
-- Python: `C:/Users/<you>/Desktop/AI_Projects/_system/skills/web-scrape/.venv-scrapling/Scripts/python.exe`
-- CLI:    `C:/Users/<you>/Desktop/AI_Projects/_system/skills/web-scrape/.venv-scrapling/Scripts/scrapling.exe`
-- Installed extra: `scrapling[shell]` → HTTP `Fetcher`, adaptive selectors, and the no-code `scrapling extract` CLI. **HTTP-only — no browser download.**
+- Bootstrap: `C:/Users/<you>/Desktop/AI_Projects/_system/skills/web-scrape/scripts/ensure-scrapling-venv.ps1`
+- CLI wrapper: `C:/Users/<you>/Desktop/AI_Projects/_system/skills/web-scrape/scripts/scrapling.ps1`
+- Requirements: `C:/Users/<you>/Desktop/AI_Projects/_system/skills/web-scrape/requirements-scrapling.txt` (`scrapling==0.4.9` plus deps)
+- Python after bootstrap: `C:/Users/<you>/Desktop/AI_Projects/_system/skills/web-scrape/.venv-scrapling/Scripts/python.exe`
+- Installed extra: captured from the working `scrapling[shell]` environment → HTTP `Fetcher`, adaptive selectors, and the no-code `scrapling extract` CLI. **HTTP-only — no browser download.**
 - **Stealth/dynamic fetchers** (`StealthyFetcher`, `DynamicFetcher` for JS/Cloudflare) need a one-time browser fetch:
-  `& ".../.venv-scrapling/Scripts/scrapling.exe" install` (downloads patchright/Playwright browsers, several hundred MB). Run that only when you actually need the Turnstile-bypass tier.
+  `& "C:/Users/<you>/Desktop/AI_Projects/_system/skills/web-scrape/scripts/scrapling.ps1" install` (downloads patchright/Playwright browsers, several hundred MB). Run that only when you actually need the Turnstile-bypass tier.
+
+## Setup (venv not committed)
+
+```powershell
+cd "C:/Users/<you>/Desktop/AI_Projects/_system/skills/web-scrape"
+.\scripts\ensure-scrapling-venv.ps1
+
+# Optional, only for StealthyFetcher/DynamicFetcher browser-backed scraping:
+.\scripts\scrapling.ps1 install
+```
 
 ## Usage
 
 **No-code: URL → markdown (HTTP fetcher, the workhorse)**
 ```bash
-"C:/Users/<you>/Desktop/AI_Projects/_system/skills/web-scrape/.venv-scrapling/Scripts/scrapling.exe" extract get "<url>" out.md
+powershell -ExecutionPolicy Bypass -File "C:/Users/<you>/Desktop/AI_Projects/_system/skills/web-scrape/scripts/scrapling.ps1" extract get "<url>" out.md
 # add --css-selector "<sel>" to narrow; --txt for plain text
 ```
 

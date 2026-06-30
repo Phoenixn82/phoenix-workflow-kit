@@ -200,6 +200,8 @@ Cost-first probe + lesson-logger at `scripts/` (built Phase 5, acceptance-tested
 |---|---|
 | `scripts/cost-tier-check.py --url <url> [--json]` | Probes tier 1 (Firecrawl) → tier 2 (Cloak) → tier 3 (local driver) in order. Returns the verified tier with reason + latency_ms. Use BEFORE invoking a wrench so the right tier is chosen first-try. |
 | `scripts/scrape-lesson-log.py --project <slug> --url <url> --tier-used N --tier-cheaper M --tokens-burned N` | Appends a `token-note` entry to `Projects/<slug>/tokens.md` when a scrape fell through to a higher (more expensive) tier. 24h dupe-skip. Auto-invoke from wrenches when tier_used > 1. |
+| `scripts/ensure-scrapling-venv.ps1` | Recreates `.venv-scrapling` from `requirements-scrapling.txt` when the local Scrapling venv is missing. |
+| `scripts/scrapling.ps1` | Self-healing Scrapling CLI wrapper; ensures the venv exists, then forwards args to `.venv-scrapling/Scripts/scrapling.exe`. |
 
 Spec (provenance only): `PHASE_5_DISPATCH.md` § 4.1 + § 4.2 — that file now lives solely at `_archive\claude_projects_2026-05-pre-rebuild\Rebuild\`; the shipped scripts are self-documenting. The same `Spec:` headers in `cost-tier-check.py` / `scrape-lesson-log.py` are likewise just provenance.
 
