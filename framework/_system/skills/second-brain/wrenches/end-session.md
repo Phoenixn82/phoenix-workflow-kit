@@ -18,13 +18,13 @@ Walk the session's history and pull out every instance of each category. Don't p
 | # | Category | Vault target | Format |
 |---|---|---|---|
 | 1 | **Decisions** | `Projects/<slug>/decisions.md` (appends) | Dated entry with reasoning, alternatives considered, confidence |
-| 2 | **Preferences / defaults** | `Actions/<slug>.md` (creates or appends) | Rule + Why + How-to-apply (the feedback memory format) |
+| 2 | **Preferences / defaults** | Scope first: if it applies to more than one project, `Actions/<slug>.md` (rare); if not, `Projects/<slug>/prefs.md` | Rule + Why + How-to-apply (the feedback memory format). Decision rule: "Does this preference apply to more than one project? If NO -> it is project-scoped." |
 | 3 | **Errors + root-cause + fix** | `Projects/<slug>/errors.md` (appends) | what / cause / fix / prevention (all four required) |
 | 4 | **Token-expensive approaches** | `Projects/<slug>/tokens.md` (appends) | expensive / cheaper / when-to-apply |
 | 5 | **Project status changes** | `Projects/<slug>/status.md` (overwrites) | Live snapshot: phase, done, in-flight, blocked |
 | 6 | **New skills found + integration** | `Mechanics/<mechanic>/state.md` (the mechanic-state axis — source of truth for what's already there) + vault catalog `index.md` | Per the Skill Law — every new skill earns a home |
 | 7 | **Open loops** | `Projects/<slug>/open-loops.md` (appends) | Loop / waiting-on / unblocks / ETA |
-| 8 | **Corrections** | `Actions/corrections-<date>.md` (creates) | What I did / what the user corrected / why / new default |
+| 8 | **Corrections** | Standing behavior -> capped harness `feedback_<slug>.md`; audit line -> `Actions/_archive/corrections-log.md`; global-rule candidates -> draft note for the user | What I did / what the user corrected / why / new default. Do not create live `Actions/corrections-<date>.md`. |
 | 9 | **Next-session prompt** | `Projects/<slug>/next-prompt.md` (overwrites) | The exact prompt the user can paste into a fresh session to continue |
 
 ---
@@ -146,13 +146,23 @@ Default vote on every item: write it. The user's bar should be "is this worth a 
 ### Step 4: Write to vault + harness
 
 For approved items:
-1. Write each item to its vault target (categories 1-8 above)
-2. Mirror the relevant subset into the harness layer at `~/.claude/projects/<project-slug>/memory/`:
-   - New preferences → `feedback_<slug>.md` + index entry in `MEMORY.md`
-   - Status changes → `project_status.md`
-   - Active error patterns → `error_<slug>.md` + index entry
-3. Update `_system/second-brain/index.md` (the vault catalog) with one-line entries for any new top-level nodes
-4. Append a one-line entry to `_system/second-brain/log.md` recording the session and what changed
+1. Write each item to its vault target (categories 1-8 above), using the table's scope rule before writing preferences. For any new or overwritten note with frontmatter, set `importance` (1-10, default 5) and `last-touched` (today's YYYY-MM-DD):
+   - Ask: "Does this preference apply to more than one project?"
+   - If NO, write or append `Projects/<slug>/prefs.md`.
+   - If YES, write or append `Actions/<slug>.md` (rare; cross-project only).
+2. Write corrections without live `Actions/corrections-<date>.md` files:
+   - If the correction establishes a standing behavior, promote that behavior into the capped harness `feedback_<slug>.md` stub.
+   - Append one dated audit line to `Actions/_archive/corrections-log.md`.
+   - If the correction belongs in global `~/.claude/CLAUDE.md`, include that in the approval draft for the user; do not auto-edit global CLAUDE.md.
+3. Mirror only the relevant active subset into the harness layer at `~/.claude/projects/<project-slug>/memory/`:
+   - New standing behaviors/preferences -> `feedback_<slug>.md` + one-line entry in `MEMORY.md`.
+   - Status changes -> `project_status.md`.
+   - Active error patterns -> `error_<slug>.md` + one-line entry in `MEMORY.md`.
+4. Keep harness `feedback_<slug>.md` files as capped facts stubs (target <= ~1.6 KB / ~400 tokens): operating facts only, plus a one-line pointer to the vault history file. Long chronology / build history goes to `Projects/<slug>/history.md` (append), not the harness file.
+5. Dedup rule: each fact has one home. If it lives in harness `feedback_*`, do not duplicate it in live `Actions/`; if it belongs in live `Actions/`, do not mirror the same fact into harness.
+6. Regenerate `_system/second-brain/session-state.md`: active project, top-3 priorities, hot open-loops, and last-session note; keep it tiny (<~15 lines).
+7. Update `_system/second-brain/index.md` (the vault catalog) with one-line entries for any new top-level nodes. Keep it one-line-per-node; the `--emit-index` generator is deferred, so this is hand-maintained for now.
+8. Append a one-line entry to `_system/second-brain/log.md` recording the session and what changed.
 
 ### Step 5: Write the handoff file
 

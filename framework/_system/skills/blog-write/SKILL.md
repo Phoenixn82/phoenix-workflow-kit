@@ -5,15 +5,15 @@ description: Write or update the personal-site blog from radar candidates. Trigg
 
 # blog-write - personal-site blog writer
 
-The detector (`Blog/tools/blog_radar.py`) decides when a project is blog-worthy and writes `Blog/_RADAR.md`.
+The detector (`projects/phoenixnachtegaele/tools/blog_radar.py`) decides when a project is blog-worthy and writes `projects/phoenixnachtegaele/_RADAR.md`.
 This skill decides what to write after the user explicitly triggers it. It never writes autonomously.
 
 ## 0. Always Start Here
 
-1. Run the radar fresh: `python Blog/tools/blog_radar.py report`, then read `Blog/_RADAR.md`.
+1. Run the radar fresh: `python projects/phoenixnachtegaele/tools/blog_radar.py report`, then read `projects/phoenixnachtegaele/_RADAR.md`.
 2. Pick the target: the user names a project, or use the top candidate. The radar lane selects the mode.
-3. Read the voice rules every time: `Blog/_VOICE.md`, `Reference/phoenix-writing-style-guide.md`, `Blog/video-curator/post.md`, and `Blog/example_app/post.md`.
-4. Pull the project's fresh beats from `Blog/_QUEUE.md`. Use the unconsumed beat IDs listed by the radar/report.
+3. Read the voice rules every time: `projects/phoenixnachtegaele/_VOICE.md`, `Reference/phoenix-writing-style-guide.md`, `projects/phoenixnachtegaele/video-curator/post.md`, and `projects/phoenixnachtegaele/example_app/post.md`.
+4. Pull the project's fresh beats from `projects/phoenixnachtegaele/_QUEUE.md`. Use the unconsumed beat IDs listed by the radar/report.
 
 ## Modes
 
@@ -21,26 +21,26 @@ This skill decides what to write after the user explicitly triggers it. It never
 
 Use when a project has no blog anchor yet.
 
-- Scaffold `Blog/<slug>/` from `Blog/_TEMPLATE.md`.
+- Scaffold `projects/phoenixnachtegaele/<slug>/` from `projects/phoenixnachtegaele/_TEMPLATE.md`.
 - Draft in the house voice: reason, journey, result.
 - Theme it to the project's own design tokens. Follow `PORTFOLIO_GUIDELINE.md`.
-- Capture screenshots through the existing workflow recipe in `Blog/_screenshot-task.md`. Never fabricate screenshots, metrics, dates, or repo links.
+- Capture screenshots through the existing workflow recipe in `projects/phoenixnachtegaele/_screenshot-task.md`. Never fabricate screenshots, metrics, dates, or repo links.
 - Add the homepage card only if the user approved publishing the new anchor.
 - Finish with the mandatory state update:
-  `python Blog/tools/blog_radar.py mark --slug <slug> --date <today> --sha <repoHEAD-or-omit> --consume <beatIds...>`
+  `python projects/phoenixnachtegaele/tools/blog_radar.py mark --slug <slug> --date <today> --sha <repoHEAD-or-omit> --consume <beatIds...>`
 
 ### UPDATE_ARTICLE
 
 Use when one project has a large batch that deserves its own dated article.
 
-- Create `Blog/<slug>/updates/<YYYY-MM-DD>-<short>/index.html`.
+- Create `projects/phoenixnachtegaele/<slug>/updates/<YYYY-MM-DD>-<short>/index.html`.
 - Keep it self-contained and sized to the actual batch.
 - Append or extend the anchor's `Updates` section with a link to the new article.
 - Make sure the weekly digest carries only a teaser plus the user's callout line:
   "I did way too much work on this project to fit it in the weekly update - check out the full write-up here".
 - Link the repo only when `tools/projects.json` has `public: true` for that slug.
 - Finish with the mandatory state update:
-  `python Blog/tools/blog_radar.py mark --slug <slug> --date <today> --consume <beatIds...> --article <YYYY-MM-DD>-<short>`
+  `python projects/phoenixnachtegaele/tools/blog_radar.py mark --slug <slug> --date <today> --consume <beatIds...> --article <YYYY-MM-DD>-<short>`
 
 ### ANCHOR_UPDATE / STALE
 
@@ -51,19 +51,19 @@ Use when the existing anchor has drifted or needs a small factual reconcile.
 - Keep the anchor lean. Add current facts, then trim or compress older low-value detail so the post stays in its length band.
 - Always preserve the opening problem, the current result, and one honest-mistake beat.
 - Finish with the mandatory state update:
-  `python Blog/tools/blog_radar.py mark --slug <slug> --date <today> --consume <beatIds...>`
+  `python projects/phoenixnachtegaele/tools/blog_radar.py mark --slug <slug> --date <today> --consume <beatIds...>`
 
 ### WEEKLY_DIGEST
 
 Use when the radar weekly banner is READY or the user asks for a weekly roundup.
 
-- Build `Blog/weekly/<YYYY-Www>/index.html` from `Blog/_weekly-digest.template.html`.
+- Build `projects/phoenixnachtegaele/weekly/<YYYY-Www>/index.html` from `projects/phoenixnachtegaele/_weekly-digest.template.html`.
 - Use one tight paragraph for each `WEEKLY_ITEM` project.
 - Use a two-sentence teaser for each `UPDATE_ARTICLE` project and link to the full update article.
-- Refresh the landing `What I've been up to this week` block in `Blog/index.html`.
-- Add or prepend the digest to `Blog/weekly/index.html`, using `Blog/_weekly-archive.template.html` if the archive does not exist.
+- Refresh the landing `What I've been up to this week` block in `projects/phoenixnachtegaele/index.html`.
+- Add or prepend the digest to `projects/phoenixnachtegaele/weekly/index.html`, using `projects/phoenixnachtegaele/_weekly-archive.template.html` if the archive does not exist.
 - Finish with the mandatory state update:
-  `python Blog/tools/blog_radar.py mark --week <YYYY-Www> --date <today> --consume <all digest beatIds...>`
+  `python projects/phoenixnachtegaele/tools/blog_radar.py mark --week <YYYY-Www> --date <today> --consume <all digest beatIds...>`
 
 ## Guardrails
 

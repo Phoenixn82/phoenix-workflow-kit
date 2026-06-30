@@ -1,11 +1,11 @@
 ---
 name: web-scrape
-description: Cost-first web scraping mechanic. Firecrawl (default cheap tier) → Cloak Browser (bot-detection / geo / auth fallback) → chrome-devtools-mcp or Playwright (local driver, last resort). Dispatches to one of six wrenches based on the shape of the ask. Fires on phrases like "scrape this", "get the content from", "extract from URL", "crawl this site", "find pages about X on Y.com", "search the web for", "log into and pull", "structured data from", "all products from this catalog", or any URL the user wants turned into usable text/data.
+description: Cost-first web scraping mechanic. Firecrawl (default cheap tier) → Cloak Browser (bot-detection / geo / auth fallback) → chrome-devtools-mcp or Playwright (local driver, last resort). Dispatches to one of seven wrenches based on the shape of the ask. Fires on phrases like "scrape this", "get the content from", "extract from URL", "crawl this site", "find pages about X on Y.com", "search the web for", "log into and pull", "structured data from", "all products from this catalog", or any URL the user wants turned into usable text/data.
 ---
 
 # web-scrape — cost-first scraping mechanic
 
-One mechanic, one cost ladder, six wrenches. Claude reads the ask, picks the cheapest wrench that can do the job, falls through tiers only when the cheap one actually fails — never speculatively.
+One mechanic, one cost ladder, seven wrenches. Claude reads the ask, picks the cheapest wrench that can do the job, falls through tiers only when the cheap one actually fails — never speculatively.
 
 The cost ladder is not a capability ladder. Firecrawl can render JS, hold a browser session, log into auth-walled pages, and extract structured JSON. It loses only to bot-detection grids that fingerprint the headless browser, geo-restricted content, or flows that need a real residential IP. The instinct to reach for chrome-devtools-mcp "because it's a real browser" is wrong almost every time.
 
@@ -79,6 +79,7 @@ The cost ladder is not a capability ladder. Firecrawl can render JS, hold a brow
 | "Get all pages under /docs" / "crawl this site" / "bulk extract" | `crawl` | Depth-filtered, multi-page extraction |
 | "Log in and pull" / "click through pagination" / "fill the form first" / "scrape failed because JS" | `interact` | Holds a live browser session, runs actions, then extracts. Also serves the Cloak Browser fallback tier |
 | "Extract all products as JSON with these fields" / "structured data from multiple pages with this schema" | `agent` | Schema-driven, AI-navigated structured extraction |
+| "scrape it free / locally" / "this selector keeps breaking" / "Cloudflare Turnstile, no Cloak credits" | `scrapling` | Free local adaptive scraper — relocates elements after layout change (no LLM); local Turnstile bypass. The free-local lane, cheaper than tier 3 |
 
 If the ask mixes shapes (e.g., "search for blog posts about X then extract them all"), chain wrenches: `search` → loop `scrape` per result. Don't try to pack into one wrench.
 
@@ -133,6 +134,7 @@ When it does NOT fire — even though it sounds like it might:
 | **crawl** | `wrenches/crawl.md` | Bulk extract every page (or filtered subset) on a domain. Depth, path, and content-type filters. Includes `--write-files` for download-to-disk |
 | **interact** | `wrenches/interact.md` | Live browser session. Click, fill, navigate, then extract. Serves the Cloak Browser fallback tier. Also handles auth flows |
 | **agent** | `wrenches/agent.md` | Structured JSON extraction with a schema, AI-navigated across multiple pages. For directories, catalogs, pricing pages, anything tabular |
+| **scrapling** | `wrenches/scrapling.md` | Free **local** adaptive scraper. Relocates elements after layout changes (no LLM); local Cloudflare-Turnstile bypass. The free-local lane — use for zero-cost/high-volume scraping or recurring targets that keep breaking selectors. Cheaper than the tier-3 local drivers |
 
 ---
 
@@ -211,6 +213,7 @@ Spec (provenance only): `PHASE_5_DISPATCH.md` § 4.1 + § 4.2 — that file now 
 - [wrenches/crawl.md](wrenches/crawl.md) — bulk multi-page extraction
 - [wrenches/interact.md](wrenches/interact.md) — live browser session + Cloak fallback
 - [wrenches/agent.md](wrenches/agent.md) — structured JSON extraction with schema
+- [wrenches/scrapling.md](wrenches/scrapling.md) — free local adaptive scraper (zero Firecrawl spend; layout-change resilience; local Turnstile bypass)
 - [`AGENTS.md`](../../../AGENTS.md) — operating manual (hard rule #5 code-routing, hard rule #6 cost-first scraping)
 - [`DECISION_MAP.md`](../../../DECISION_MAP.md) — task → tool routing
 - [`router/SKILL.md`](../router/SKILL.md) — multi-brain dispatcher (Codex/Gemini routing for downstream work)

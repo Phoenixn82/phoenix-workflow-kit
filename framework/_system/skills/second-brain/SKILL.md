@@ -42,20 +42,19 @@ Active projects = whatever folders currently live under `Projects/` (enumerate t
 
 ### Action axis: `_system/second-brain/Actions/`
 
-Cross-project preferences and defaults — the "do it the way I asked last time" memory. One file per preference cluster.
+Cross-project preferences and defaults — the "do it the way I asked last time" memory. One file per preference cluster. This axis is for rules that apply to more than one project; project-scoped preferences belong in `Projects/<slug>/prefs.md`.
 
 ```
 Actions/
   scraping-tier.md         # Firecrawl → Cloak Browser → local drivers (cost-first)
   design-defaults.md       # "always grab the photos too" etc.
   brevity-defaults.md      # "no em dashes, no filler, terse recaps"
-  code-discipline.md       # Karpathy guidelines, surgical changes, blast radius
   routing-defaults.md      # Codex is default code lane; Gemini doesn't write code files
   error-handling.md        # No fixes without root cause (Iron Law from `investigate`)
   ...
 ```
 
-When the user tells me to do something a certain way more than once, it becomes a stored action-default — no re-asking, same session or future.
+When the user tells me to do something a certain way more than once, scope it before writing: "Does this preference apply to more than one project?" If no, write `Projects/<slug>/prefs.md`; if yes, write `Actions/<slug>.md` (rare).
 
 ### Mechanic-state axis: `_system/second-brain/Mechanics/<mechanic>/state.md`
 
@@ -186,12 +185,15 @@ Every note written to the vault MUST follow this. The vault is for **future-Clau
    tags: [tag1, tag2]
    ai-first: true
    confidence: stated | high | medium | speculation
+   importance: 1-10        # optional retrieval weight; default 5
+   last-touched: YYYY-MM-DD # optional retrieval recency marker
    ---
    ```
-4. **Recency markers per claim.** "Codex Pro $200/mo (as of 2026-05-27, OpenAI)" so future-Claude knows what to verify before relying on it.
-5. **Sources preserved verbatim.** Every external claim has its source URL inline. Every quote keeps the verbatim form.
-6. **Cross-links mandatory.** Every person / project / idea / decision uses `[[wikilinks]]`. Link liberally — a `[[name]]` that doesn't match an existing note yet is fine; it marks something worth writing later.
-7. **No "humanizing".** Don't strip frontmatter or preambles to make notes look cleaner. Vault notes are not blog posts.
+4. **Retrieval scoring fields.** New writes set `importance` (1-10, default 5) and `last-touched` (YYYY-MM-DD) when frontmatter exists. Recall uses these only for ranking; they do not replace source/context judgment.
+5. **Recency markers per claim.** "Codex Pro $200/mo (as of 2026-05-27, OpenAI)" so future-Claude knows what to verify before relying on it.
+6. **Sources preserved verbatim.** Every external claim has its source URL inline. Every quote keeps the verbatim form.
+7. **Cross-links mandatory.** Every person / project / idea / decision uses `[[wikilinks]]`. Link liberally — a `[[name]]` that doesn't match an existing note yet is fine; it marks something worth writing later.
+8. **No "humanizing".** Don't strip frontmatter or preambles to make notes look cleaner. Vault notes are not blog posts.
 
 This rule lives at `_system/second-brain/_CLAUDE.md` (the vault's operating manual). It's enforced on every wrench's write path.
 
@@ -201,10 +203,13 @@ This rule lives at `_system/second-brain/_CLAUDE.md` (the vault's operating manu
 
 Second-brain is always-core, but it does NOT load the whole vault at session start. The load is bounded:
 
-**Always loads at session start (~1-3 KB total):**
-- `_system/second-brain/_CLAUDE.md` (vault operating manual)
-- `_system/second-brain/index.md` (catalog — one line per top-level node)
-- ALL of `Actions/*.md` (preferences are small, all relevant cross-project)
+**Always loads at session start (~2-3 KB total):**
+- `_system/second-brain/boot.md` via the project SessionStart hook (stable vault orientation)
+- `_system/second-brain/session-state.md` via the same hook (tiny volatile state)
+- `_system/second-brain/index.md` only as the router when something must be found
+- Do NOT bulk-load `Actions/*.md`; load the one action note needed on demand
+
+Never auto-pull anything under an `_archive/` subdirectory. Archived notes are retained for audit/reversal, not loaded memory.
 
 **Loads on project mention:**
 - When the user names a project second-brain hasn't loaded this session, read `Projects/<slug>/_README.md` + `status.md` + most-recent `next-prompt.md` BEFORE responding.
@@ -239,14 +244,16 @@ Use whichever is available; never bother the user about which one.
 When the user says "end session", "save my work", "wrap up", "extract takeaways", or similar, run the full ritual. See [wrenches/end-session.md](wrenches/end-session.md) for the step-by-step. Summary of what gets extracted:
 
 1. **Decisions** — every choice the user made and the reasoning
-2. **Preferences / defaults** — anything that should now be a standing rule (writes to `Actions/`)
+2. **Preferences / defaults** — anything that should now be a standing rule; scope first, then write cross-project rules to `Actions/` and project-scoped rules to `Projects/<slug>/prefs.md`
 3. **Errors with root-cause + fix + prevention** — writes to `Projects/<slug>/errors.md`
 4. **Token-expensive approaches** — what burned tokens and the cheaper path next time → `Projects/<slug>/tokens.md`
 5. **Project status changes** — what advanced, what's now blocked → `Projects/<slug>/status.md`
 6. **New skills found and where they integrate** — per the Skill Law, every new skill gets a home
 7. **Open loops** — things waiting on something or someone → `Projects/<slug>/open-loops.md`
-8. **Corrections** — every time the user corrected my behaviour, what the correction was and why
+8. **Corrections** — every time the user corrected my behaviour, what the correction was and why; standing behavior goes to a capped harness `feedback_<slug>.md`, with only a dated audit line in `Actions/_archive/corrections-log.md`
 9. **Generates `next-prompt.md`** — the exact prompt to start the next session with so the work transfers perfectly
+
+Ritual maintenance also regenerates `_system/second-brain/session-state.md` (active project + top-3 priorities + hot open-loops, tiny) and keeps `_system/second-brain/index.md` one-line-per-node when updating the catalog. The `--emit-index` generator is deferred; the index is hand-maintained for now.
 
 The mechanic shows a DRAFT first. The user approves or trims. Only approved content writes to disk.
 
@@ -347,11 +354,13 @@ The orchestrator (when built in Phase 6) triggers handoff emission automatically
 The current Claude Code harness loads memory from `~/.claude/projects/<project-slug>/memory/MEMORY.md` at session start. Second-brain mirrors active items into this layer so the harness picks them up automatically.
 
 **Sync direction (vault → harness):** when a project becomes active, second-brain syncs key entries:
-- Active feedback memories (from `Actions/*.md`) → harness `feedback_*.md` files
+- Active feedback memories (from genuinely cross-project `Actions/*.md` or project-scoped `Projects/<slug>/prefs.md`) → harness `feedback_*.md` facts stubs
 - Current project status (from `Projects/<slug>/status.md`) → harness `project_status.md`
 - Active error patterns (from `Projects/<slug>/errors.md`) → harness `error_*.md` files
 
-**Sync direction (harness → vault):** end-session ritual reads any new harness memories written during the session and writes them as canonical vault entries.
+Harness `feedback_*.md` files are capped facts stubs (target <= ~1.6 KB / ~400 tokens): operating facts only, plus a one-line pointer to the vault history file. Long chronology / build history lives in `Projects/<slug>/history.md` (or `Reference/` for non-project material), not in the harness file.
+
+**Sync direction (harness → vault):** end-session ritual reads any new harness memories written during the session and writes them as canonical vault entries. Dedup rule: each fact has one home. If it lives in harness `feedback_*`, do not also write it to live `Actions/`; if it belongs in live `Actions/`, do not mirror the same fact into harness.
 
 **Why both layers?** The harness layer is what Claude Code's `auto memory` system auto-loads at session start — small, indexed, current. The vault is canonical, durable, full. Two layers means session start is cheap (harness only) AND the long-tail history is preserved (vault).
 

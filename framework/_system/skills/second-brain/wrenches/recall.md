@@ -54,6 +54,8 @@ Grep(pattern="<query>", path="C:/Users/<you>/Desktop/AI_Projects/_system/second-
 # Then Read the top hits
 ```
 
+**Candidate ranking:** When multiple notes match, surface the active project's `open-loops.md` and `next-prompt.md` first. Then rank remaining candidates by frontmatter `last-touched` recency plus `importance` (1-10, default 5). Grep/keyword search over the index and notes is enough; do not add embeddings for this.
+
 **Result format** — present results as a tight summary, NOT a file dump:
 
 ```

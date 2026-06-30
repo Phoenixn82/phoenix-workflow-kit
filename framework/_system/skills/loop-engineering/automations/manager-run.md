@@ -45,25 +45,104 @@ For EACH target repo (its GitHub Issues are the control plane):
 NEVER: write code · edit repo files · open PRs · merge · delete branches · create speculative tickets ·
 mark risk:medium/high `agent:ready`.
 
-### Scanning repo content for ticket evidence — use a LOCAL CLONE, never the code-search API
+### Scanning repo content for ticket evidence - local clone, incremental cursor, never code-search API
 The GitHub code-search API (`gh search code` / the `/search/code` endpoint) is rate-limited to
 ~10 req/min and chokes across multiple repos, cutting the sweep short. Do NOT use it to find ticket
-evidence. The repo's file contents are identical whether fetched via API or cloned — so grep them
-locally, which has no rate limit:
-- For `agentic-os-97`, reuse the existing clone at
-  `C:\Users\<you>\Desktop\AI_Projects\projects\agentic_os_97` if present (fetch + checkout its
-  default branch first so it is current). For every OTHER target repo, shallow-clone its default
-  branch into a temp work area, e.g. `gh repo clone <repo> <tmp> -- --depth 1`, then remove the temp
-  clone when the per-repo scan is done.
-- Gather evidence with local `git grep` over the checked-out working tree — bounded TODO/FIXME,
-  skipped tests (`describe.skip` / `it.skip` / `xit` / `test.skip` / `@pytest.mark.skip`), stale
-  setup commands, broken relative doc links, simple config drift. Read surrounding file context from
-  the local checkout. Grep is free, so scan thoroughly rather than rationing requests.
+evidence. The repo's file contents are identical whether fetched via API or cloned, so grep them
+locally, which has no rate limit.
+
+Use the deterministic cursor helper for every repo:
+`python C:\Users\<you>\Desktop\AI_Projects\_system\automations\scan_cursor.py ...`
+
+The helper owns state at:
+`C:\Users\<you>\Desktop\AI_Projects\_system\automations\state\scan-cursors.json`
+
+Per repo, do this in order:
+1. Resolve the default branch name and HEAD SHA from GitHub:
+   `gh repo view <repo> --json defaultBranchRef --jq ".defaultBranchRef.name"`
+   and, after checkout/fetch, `git rev-parse HEAD`.
+2. Prepare a local checkout on the default branch:
+   - For `<your-github>/agentic-os-97`, reuse
+     `C:\Users\<you>\Desktop\AI_Projects\projects\agentic_os_97` if present, then `git fetch origin`
+     and checkout/reset to `origin/<default-branch>`.
+   - For every other target repo, clone into a temp work area and remove it when the per-repo scan is
+     done. Do NOT use the old `--depth 1` clone. Incremental diffs need the previous scanned commit
+     to be reachable. Prefer a normal default-branch clone, then fetch/reset to `origin/<default-branch>`.
+     If a clone is already shallow, run `git fetch --unshallow` before calling the cursor helper. If
+     history is still unreachable, the helper will return `FULL`; accept that fallback and full-scan.
+3. Call:
+   `python C:\Users\<you>\Desktop\AI_Projects\_system\automations\scan_cursor.py mode <owner/repo> <local_clone_dir> <current_head_sha>`
+4. Interpret the first output line:
+   - `FULL`: grep the whole tracked tree, with the scanner hygiene rules below. Remember this mode so
+     the later commit step passes `--full`.
+   - `INCREMENTAL`: the remaining output lines are repo-relative changed file paths from
+     `git diff --name-only <last_scanned_sha>..<head>`. Grep ONLY those changed files, after applying
+     the scanner hygiene rules below. Do not scan unchanged files in this mode.
+   - `UNCHANGED`: skip the content scan entirely for this repo on this run. Still run the cheap
+     GitHub-side issue reconciliation, label gap filling, Agent Assessment updates, latest default
+     branch CI check, and shared Project #1 board sync.
+5. Only after the repo's scan/reconciliation completes successfully, advance the cursor:
+   - Full scan: `python ...\scan_cursor.py commit <owner/repo> <current_head_sha> --full`
+   - Incremental scan: `python ...\scan_cursor.py commit <owner/repo> <current_head_sha>`
+   - Unchanged mode: no content scan occurred, so do not needlessly rewrite the cursor.
+   Never call `commit` before the per-repo work is complete; a mid-run crash must not skip commits on
+   the next run.
+
+#### Scanner hygiene
+Use `git grep` only, never filesystem `grep -r` / `Select-String -Recurse` over the checkout. `git grep`
+limits evidence to tracked files. Always include explicit pathspec excludes for dependency, build, and
+output paths:
+`:(exclude)**/node_modules/**`, `:(exclude)**/dist/**`, `:(exclude)**/build/**`,
+`:(exclude)**/.next/**`, `:(exclude)**/out/**`, `:(exclude)**/coverage/**`,
+`:(exclude)**/vendor/**`, `:(exclude)**/pnpm-lock.yaml`, `:(exclude)**/package-lock.json`,
+`:(exclude)**/yarn.lock`.
+
+Content scan evidence may include bounded TODO/FIXME, stale setup commands, broken relative doc links,
+simple config drift, and skipped tests, with these limits:
+- Skipped test evidence may ONLY come from actual test files: paths matching `**/test/**`,
+  `**/tests/**`, `**/__tests__/**`, `*.test.*`, or `*.spec.*`.
+- Skipped test evidence may ONLY use real skip markers: `describe.skip`, `it.skip`, `xit`,
+  `test.skip`, or `@pytest.mark.skip`.
+- Do NOT raise skipped-test tickets from markdown docs, lockfiles, dependency dirs, generated output,
+  or config files.
+- Broken-doc-link evidence is allowed only in real doc/source files and never inside excluded dirs.
+- Lockfiles are excluded from content grep. They can still count as build-relevant changed files in
+  the build-awareness step below.
+
+For incremental mode, first filter the helper's changed-file list through the same exclusions. Then
+pass the remaining repo-relative paths to `git grep -- <changed paths> <pathspec excludes>`. If no
+eligible changed files remain, record that the content scan was skipped for hygiene reasons and still
+run issue/board/CI reconciliation.
+
+#### Lightweight build-awareness
+For every repo, fetch the latest default-branch CI signal with:
+`gh run list --repo <repo> --branch <default-branch> --limit 1 --json databaseId,conclusion,status,headSha,workflowName`
+
+If the latest default-branch run is failing (`conclusion` such as `failure`, `timed_out`, or
+`cancelled`, or a completed non-success conclusion), that is concrete evidence for a build/CI ticket.
+Cite the workflow name, run id, status/conclusion, branch, and head SHA in the issue.
+
+When a FULL or INCREMENTAL scan sees changed build-relevant files, note the build impact in the issue's
+`## Agent Assessment` Reason. Build-relevant files are: `package.json`, `pnpm-lock.yaml`,
+`package-lock.json`, `yarn.lock`, `pyproject.toml`, `requirements.txt`, `.github/workflows/*`,
+`*.config.*`, `tsconfig*.json`, `.eslintrc*`, and similar repo build/test/lint config files. Do NOT
+build a dependency graph or infer downstream blast-radius. Keep the assessment to changed build files
+plus the current default-branch CI signal.
+
+#### Issue path sanitization
+Issue titles, issue bodies, and Agent Assessment comments must use repo-relative paths only, for
+example `framework/_system/skills/cso/SKILL.md`.
+
+Before creating or updating any issue/comment, strip any absolute path or temp-clone prefix and convert
+it to the repo-relative path from the checkout. Never write these strings into public issue titles,
+bodies, or comments: `C:\Users\<you>`, `AppData\Local\Temp`, `backlog-manager-clones`, or any absolute
+Windows path rooted at a drive letter. If evidence collection produced an absolute path, normalize it
+before writing GitHub content.
 
 Keep using `gh` (the REST issues API, well under its 5,000 req/hr authenticated limit) for everything
-issue-side — reading issues, labels, comments, creating tickets, and the board sync below — and for
-CI status (`recent failed CI on default branch`), which is GitHub-side state with no local
-equivalent. Only the code-CONTENT search moves local; issue/label/board/CI operations stay on `gh`.
+issue-side - reading issues, labels, comments, creating tickets, and the board sync below - and for
+CI status (`recent failed CI on default branch`), which is GitHub-side state with no local equivalent.
+Only the code-CONTENT search moves local; issue/label/board/CI operations stay on `gh`.
 
 ### Handling GitHub API rate limits — back off, never abort
 Local `git grep` above already removes the code-search API from the hot path. For any remaining `gh`

@@ -24,7 +24,7 @@ This is the only skill context loaded at session start. Don't pre-load any mecha
 
 | Mechanic | What |
 |---|---|
-| **web-scrape** | Cost-first scraping. Firecrawl (default) → Cloak Browser (bot detection) → local browser drivers (chrome-devtools-mcp / Playwright) last resort. Wrenches: search, scrape, map, crawl, interact, agent |
+| **web-scrape** | Cost-first scraping. Firecrawl (default) → Cloak Browser (bot detection) → local browser drivers (chrome-devtools-mcp / Playwright) last resort. Wrenches: search, scrape, map, crawl, interact, agent, scrapling (free local adaptive tier) |
 | **build** | Scaffold sites/apps/backends/mobile with the right runtime per target. Mobile runtime picked per signal — native (Swift/Kotlin) OR RN/Flutter OR Capacitor/PWA/Tauri-mobile (no blanket always-native or always-webview rule). Wrenches: `website` (DRIP framework), `mobile` (per-signal runtime), `backend`, `rag-architect` (RAG design for project data), `onboarding-guard` (redirect-logic pattern checklist) |
 | **ship** | Commit → tests → review → PR → merge → deploy → canary → pay-for-this verdict. Wrenches: ship, land-and-deploy, setup-deploy, canary, document-release, python-ci-preflight, review (Codex runs diff-quality), qa (--report-only flag), pay-for-this, benchmark |
 | **seo** | One entry, 22 sub-wrenches. `audit` (full sweep) / `page` (single URL) / `plan` (strategy) / `technical` / `content` / `schema` / `sitemap` / `images` / `image-gen` (banana MCP) / `geo` (AI Overviews) / `local` / `maps` / `hreflang` / `google` (API creds) / `backlinks` / `cluster` / `sxo` / `drift` / `ecommerce` / `competitor-pages` / `programmatic` / `dataforseo` (MCP) |

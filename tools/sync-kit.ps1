@@ -32,7 +32,7 @@ $AIP      = Join-Path $HOMEDIR "Desktop\AI_Projects"
 # The vault CONTENT (_system/second-brain, a sibling of _system/skills) is never mirrored,
 # and scrub.py's path guard is the backstop. These extra excludes keep private dirs from
 # ever being transiently staged before the scrub runs.
-$ExcludeDirs  = @("__pycache__","node_modules",".git","logs","state","pipeline","tests","secrets","_staging","voice-corpus",".secrets","claude_vault",".codex")
+$ExcludeDirs  = @("__pycache__","node_modules",".git",".venv-scrapling",".venv",".venv*","logs","state","pipeline","tests","secrets","_staging","voice-corpus",".secrets","claude_vault",".codex")
 # Gmail-sender harness scripts are intentionally NOT shipped (operator: not in current workflow;
 # carried a real address in a docstring example). .mailsvc-token is their runtime IPC nonce.
 $ExcludeFiles = @("*.log",".claude-codex-log.md","desktop.ini","Thumbs.db",".DS_Store","denylist.local.json","test_public_push_gate_allowlist.py","send_gmail.py","mail_sender_service.py",".mailsvc-token")

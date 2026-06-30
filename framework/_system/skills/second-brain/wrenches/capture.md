@@ -7,7 +7,7 @@ description: Wrench inside the `second-brain` mechanic. Mid-session quick writes
 
 When something worth remembering surfaces during work, write it to the vault without breaking flow. No ceremony, no draft-and-approve cycle (that's the end-session ritual's job). Just write it, keep going.
 
-The mechanic's AI-first rule applies on every capture: preamble + frontmatter + wikilinks + recency markers. See `../SKILL.md` § AI-first rule.
+The mechanic's AI-first rule applies on every capture: preamble + frontmatter + wikilinks + recency markers. See `../SKILL.md` § AI-first rule. When a capture has frontmatter, set `importance` (1-10, default 5) and `last-touched` (today's YYYY-MM-DD).
 
 ---
 
@@ -211,6 +211,7 @@ Each mechanic's state file has these sections (created lazily, appended to over 
 type: mechanic-state
 mechanic: web-scrape
 last-touched: 2026-05-28
+importance: 5
 ai-first: true
 ---
 
@@ -255,7 +256,7 @@ Updates happen via:
 - `skill-scout` on a trigger-phrase miss (notes the gap)
 - The user manually when something material changes
 
-**Append rules:** new sections at the top of their list; date-stamp every addition under "Recent additions / changes"; update `last-touched` in frontmatter on every write.
+**Append rules:** new sections at the top of their list; date-stamp every addition under "Recent additions / changes"; update `last-touched` in frontmatter on every write; keep or set `importance` so recall can rank the note.
 
 ---
 

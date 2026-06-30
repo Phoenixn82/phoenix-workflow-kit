@@ -177,6 +177,7 @@
   "outputStyle": "Signal",
   "effortLevel": "xhigh",
   "autoUpdatesChannel": "latest",
+  "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "skipWorkflowUsageWarning": true,
   "autoMode": {
@@ -195,6 +196,5 @@
       "$defaults"
     ]
   },
-  "autocompact_percentage_override": 75,
-  "tui": "fullscreen"
+  "autocompact_percentage_override": 75
 }
