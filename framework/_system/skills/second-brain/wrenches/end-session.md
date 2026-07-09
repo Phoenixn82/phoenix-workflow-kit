@@ -54,6 +54,10 @@ This step is **deterministic code, not a remembered procedure** — the prose ve
    ```
    Expect `MARKED: <n>`. If the user rejects the entire Codex group, skip the mark step (leave them for a future handoff).
 
+### Step 1.6: Loop-sense and skill-firing checkpoint
+
+Scan the session for loop-shaped work; if found, propose it through `router/wrenches/loop-sense.md` instead of grinding. If any house-mechanic trigger phrase missed this session, append a row to `Projects/workflow-system/skill-firing-miss-tally.md`.
+
 ### Step 2: Build the draft
 
 Render every extracted item in vault format, but as a DRAFT — not yet written to disk. Show the user the full set, grouped by category. Format:

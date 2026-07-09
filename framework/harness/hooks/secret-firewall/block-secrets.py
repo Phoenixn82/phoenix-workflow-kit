@@ -39,6 +39,8 @@ def is_protected_path(p):
         return "a provider-key vault file"
     if n.endswith("/.codex/auth.json") or (b == "auth.json" and "/.codex/" in n):
         return "the Codex auth/session file"
+    if n.endswith("/.claude/mcp.json"):
+        return "the user-level MCP config (embeds API keys)"
     if n.endswith("/.aws/credentials") or b == ".netrc" or n.endswith("/.npmrc"):
         return "a cloud/registry credential file"
     if b in ("id_rsa", "id_dsa", "id_ecdsa", "id_ed25519"):
@@ -58,6 +60,7 @@ READ_VERBS = r"(?:cat|type|gc|get-content|more|bat|head|tail|sed|awk|strings|" \
              r"findstr|copy|cp|move|mv)"
 SECRET_FILE_HINT = r"(?:\.env(?![\w.])|\.env\.(?!example|sample|template|dist)" \
                    r"|provider-keys|/\.secrets/|\\\.secrets\\|\.codex[\\/]auth\.json" \
+                   r"|\.claude[\\/]mcp\.json" \
                    r"|\.aws[\\/]credentials|\.netrc|id_rsa|id_ed25519|\.pem\b|\.pfx\b)"
 ENV_DUMP = re.compile(
     r"(?ix)(?:"

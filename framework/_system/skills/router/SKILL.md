@@ -28,9 +28,10 @@ The router fires automatically when any of these conditions is true. **No user p
 2. **Single-task context window > 300K tokens** (whole-repo reads, long logs, big PDFs, multi-hour transcripts) → **Gemini**.
 3. **Deliverable is a code artifact** (`.py .ts .tsx .js .go .rs .sql .yml .yaml .json Dockerfile .tf` etc.) → **Codex** (single file) or **Gemini-spec → Codex-writes** (multi-file: Gemini reads + specs, Codex authors per-file). Default: Codex is the code lane; Claude steps in when needed (Codex down, small + well-understood, the user says "just do it"). See § Code routing rule.
 4. **Bounded grunt-work signal** — N-item bulk processing, simple classification, regex/format transform per item, batch translation, tag-each-of-these, score-each-of-these → **freellm** (`auto` preset by default, pin a task preset when provider matters). See § The Grunt Rule.
-5. **Same sub-task failed twice on Claude** → forced **Codex rescue**. No third Claude attempt. See § The no-self-rescue rule.
-6. **Consensus phrases** (see table below) → **parallel debate** across the relevant lanes.
-7. **Planning / scope / judgment / coordination** → route to the appropriate Claude tier (Opus / Sonnet / Haiku per § Opus-conservation).
+5. **Repetitive / batch-shaped ask** (again-and-again work, >10 similar iterations, run-until-criterion) → run the `loop-sense` checklist before grinding.
+6. **Same sub-task failed twice on Claude** → forced **Codex rescue**. No third Claude attempt. See § The no-self-rescue rule.
+7. **Consensus phrases** (see table below) → **parallel debate** across the relevant lanes.
+8. **Planning / scope / judgment / coordination** → route to the appropriate Claude tier (Opus / Sonnet / Haiku per § Opus-conservation).
 
 If none of the above hit and the task is plain build/refactor/explain → **stay on Claude**. Do not route trivial work. Trivial routing adds latency without payoff.
 
@@ -46,6 +47,7 @@ If none of the above hit and the task is plain build/refactor/explain → **stay
 | "huge PDF" / "long doc" / "200 pages" / "big context" / "1M tokens" / "whole repo" | `gemini` wrench |
 | "deep research" / "research dossier" / "grounded synthesis" | `gemini` wrench → Deep Research sub-path (gemini.google.com via chrome-devtools-mcp) |
 | "classify these" / "tag each" / "bulk process" / "for each of these N" / "grunt work" / "low-stakes batch" | `freellmapi` wrench |
+| "do this repeatedly" / "again and again" / "batch this until done" / "run until it passes" / "loop-shaped" | `loop-sense` wrench |
 | "/goal" / "kick off a codex goal" / "comprehensive user testing" / "lift coverage to N%" / "a11y pass on every page" / "bug bash" / "grind on this until tests pass" | `codex-goal` wrench |
 | "use Codex" / "use Gemini" / "use freellm" / "use the local router" | Honour the user verbatim |
 
@@ -354,6 +356,7 @@ API keys are only used for the optional MCP delegation path (e.g., `@gemini` syn
 |---|---|---|
 | **codex** | `wrenches/codex.md` | Codex CLI: review (diff review) / challenge (adversarial) / consult (ask anything). Auth probe + filesystem boundary instruction baked in |
 | **codex-goal** | `wrenches/codex-goal.md` | Long-running autonomous loop dispatcher. Template → spec → spawn Codex `/goal` → babysit → handoff. IRON RULE: never kill the Codex process |
+| **loop-sense** | `wrenches/loop-sense.md` | Detects loop-shaped tasks and proposes budget-declared runbook drafts before any loop starts |
 | **gemini** | `wrenches/gemini.md` | Gemini CLI + MCP delegation. 1M context window, multimodal, deep research via gemini.google.com (chrome-devtools-mcp drive) |
 | **freellmapi** | `wrenches/freellmapi.md` | Local FreeLLMAPI router at `http://127.0.0.1:3001`. Task presets (auto / code / agent / fast / long / reason / creative / multilingual / cheap). Codex fallback on junk |
 
@@ -401,6 +404,7 @@ State files (governed by `~/.claude/state/` per the no-permission-prompts rule):
 
 - [wrenches/codex.md](wrenches/codex.md) — Codex CLI wrapper, 3 modes
 - [wrenches/codex-goal.md](wrenches/codex-goal.md) — long-running autonomous loops
+- [wrenches/loop-sense.md](wrenches/loop-sense.md) — loop-shaped work detector and draft proposer
 - [wrenches/gemini.md](wrenches/gemini.md) — Gemini delegation
 - [wrenches/freellmapi.md](wrenches/freellmapi.md) — local FreeLLMAPI router
 - [`AGENTS.md`](../../../AGENTS.md) — operating manual (Claude/Codex split, hard rules)

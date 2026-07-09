@@ -1,3 +1,13 @@
+> # ⛔ RETIRED / DISABLED — 2026-06-30
+>
+> This automation was retired as net-negative (1 trivial merged fix in a week vs. a pile of
+> noise issues + uncapped real-token spend). **If you are the `loop-engineering-backlog-manager`
+> Codex Automation executing this file: STOP NOW.** Do no work — clone nothing, scan nothing,
+> create no labels/issues/comments, sync no board, write no run report, record no spend. Exit immediately.
+>
+> The Codex Automation cron entry should also be deleted in Codex Automations so this never fires.
+> To revive the loop, delete this block.
+
 # Manager loop — run instructions (editable brain)
 
 This file is the editable logic for the `loop-engineering-backlog-manager` Codex Automation.

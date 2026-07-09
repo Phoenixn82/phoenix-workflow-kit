@@ -117,6 +117,7 @@ When the hooks are live, the mechanic's modes are session-scoped: invoking `care
 - **Does not auto-activate.** the user turns it on. The mechanic loads at session start (always-core), but the protections sit dormant until invoked.
 - **Does not protect against scripted side-effects.** Bash commands like `sed -i`, `python -c "open(...).write(...)"`, `git filter-branch`, or anything that mutates files via a tool other than Edit/Write will bypass the freeze hook. Freeze is an accident-prevention boundary, not a security boundary.
 - **Does not block reads, globs, or non-mutating commands.** Read / Glob / Grep are unaffected. Bash commands that aren't on the destructive-pattern list are unaffected.
+- Credential filename deny patterns for future shell-read parity are documented in [reference/credential-file-patterns.md](reference/credential-file-patterns.md); no runtime shell-read hook exists yet.
 - **Does not replace the destructive-action confirmation in the system prompt.** Claude already pauses for confirmation on rm -rf and similar from the base instructions. Guard layers a programmatic check on top so the confirmation happens even when Claude would have proceeded.
 - **Does not validate file paths against per-project guardrails.** The freeze boundary is one directory per session. Per-project rules (like "don't touch /lib/db without a migration") belong in the project's CLAUDE.md or a custom skill.
 

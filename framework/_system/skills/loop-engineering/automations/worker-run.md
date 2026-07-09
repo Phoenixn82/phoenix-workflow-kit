@@ -1,3 +1,13 @@
+> # ⛔ RETIRED / DISABLED — 2026-06-30
+>
+> This automation was retired as net-negative (it produced only stale, unmerged draft PRs and
+> starved on `needs:human`-tagged issues it is barred from picking up). **If you are the
+> `loop-engineering-issue-to-pr` Codex Automation executing this file: STOP NOW.** Select no issue,
+> write no code, open no PR, write no run report, record no spend. Exit immediately.
+>
+> The Codex Automation cron entry should also be deleted in Codex Automations so this never fires.
+> To revive the loop, delete this block.
+
 # Worker loop — run instructions (editable brain)
 
 This file is the editable logic for the `loop-engineering-issue-to-pr` Codex Automation.

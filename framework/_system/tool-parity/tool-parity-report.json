@@ -17,14 +17,14 @@
     ]
   },
   "summary": {
-    "total": 10,
-    "codex_ready": 9,
-    "codex_partial": 1,
-    "missing_codex": 0
+    "total": 16,
+    "codex_ready": 12,
+    "codex_partial": 2,
+    "missing_codex": 2
   },
   "inventory": {
-    "claude_skill_count": 136,
-    "codex_skill_count": 143,
+    "claude_skill_count": 143,
+    "codex_skill_count": 161,
     "claude_mcps": [
       "gemini"
     ],
@@ -35,33 +35,43 @@
     ],
     "codex_plugins": [
       "browser@openai-bundled",
+      "chrome@openai-bundled",
       "cloudflare@openai-curated",
       "codex-security@openai-curated",
+      "computer-use@openai-bundled",
       "documents@openai-primary-runtime",
       "github@openai-curated",
       "hugging-face@openai-curated",
       "openai-developers@openai-curated",
+      "pdf@openai-primary-runtime",
       "presentations@openai-primary-runtime",
       "remotion@openai-curated",
       "spreadsheets@openai-primary-runtime",
       "stripe@openai-curated",
       "superpowers@openai-curated",
+      "template-creator@openai-primary-runtime",
       "test-android-apps@openai-curated",
       "vercel-plugin@plugins-cli",
       "vercel@openai-curated"
     ],
     "commands": {
+      "blender": false,
       "chrome": false,
       "firecrawl": true,
+      "get-windows": false,
       "gh": true,
-      "go": false,
+      "go": true,
+      "job-fit": false,
+      "ltx2": true,
       "msedge": false,
       "node": true,
       "npx": true,
       "printing-press": true,
       "python": true,
+      "scrapling": false,
       "supabase": false,
-      "vercel": true
+      "vercel": true,
+      "voicebox": false
     },
     "npx_packages": [
       "supabase"
@@ -88,7 +98,7 @@
       "status": "codex_ready",
       "codex_ready_reasons": [
         "codex skill",
-        "cli: printing-press"
+        "cli: printing-press, go"
       ],
       "claude_reasons": [
         "claude skill"
@@ -206,6 +216,79 @@
       "claude_reasons": [],
       "missing": [],
       "next_action": "OpenAI Sites plugin was not exposed in the checked Codex session. Use @Sites only when the plugin/tool is actually available."
+    },
+    {
+      "name": "scrapling",
+      "status": "codex_ready",
+      "codex_ready_reasons": [
+        "codex skill"
+      ],
+      "claude_reasons": [
+        "claude skill"
+      ],
+      "missing": [
+        "cli: scrapling"
+      ],
+      "next_action": "Use through web-scrape as the free local adaptive tier. If no CLI command exists, route via the Python package/integration code."
+    },
+    {
+      "name": "blender-mcp",
+      "status": "missing_codex",
+      "codex_ready_reasons": [],
+      "claude_reasons": [
+        "claude skill"
+      ],
+      "missing": [
+        "cli: blender",
+        "codex mcp: blender"
+      ],
+      "next_action": "Use only when Blender is installed/running and the blender-mcp bridge is exposed. Otherwise report that the GUI/socket is not ready."
+    },
+    {
+      "name": "ltx-2",
+      "status": "codex_ready",
+      "codex_ready_reasons": [
+        "cli: ltx2"
+      ],
+      "claude_reasons": [],
+      "missing": [],
+      "next_action": "Use the local ltx2 workflow command only when models/GPU path are ready. Do not download weights or spend GPU without explicit ask."
+    },
+    {
+      "name": "voicebox",
+      "status": "missing_codex",
+      "codex_ready_reasons": [],
+      "claude_reasons": [
+        "claude skill"
+      ],
+      "missing": [
+        "cli: voicebox"
+      ],
+      "next_action": "Content-forge writes the script first; use voicebox only as an explicit audio render helper when available."
+    },
+    {
+      "name": "get-windows",
+      "status": "codex_ready",
+      "codex_ready_reasons": [
+        "codex skill"
+      ],
+      "claude_reasons": [
+        "claude skill"
+      ],
+      "missing": [
+        "cli: get-windows"
+      ],
+      "next_action": "Use as a Windows launcher/desktop automation primitive only; fall back to PowerShell/.NET window inspection if unavailable."
+    },
+    {
+      "name": "job-fit",
+      "status": "codex_partial",
+      "codex_ready_reasons": [],
+      "claude_reasons": [],
+      "missing": [
+        "cli: job-fit"
+      ],
+      "next_action": "Reference/eval route for example_app only. Do not replace production ranking or scraping without a spec."
     }
   ]
 }
